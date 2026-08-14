@@ -70,6 +70,11 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
+
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'Lead');
+      }
+
       onDone(data.id, { name: name.trim(), email: email.trim() })
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
@@ -245,7 +250,7 @@ function Step3({ leadId, onBack }: { leadId: string; onBack: () => void }) {
     setVerifying(true)
 
     try {
-      const base64 = await fileToBase64(f)
+      const base64 = await compressImageToBase64(f)
       const res = await fetch('/api/verify-screenshot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -271,12 +276,12 @@ function Step3({ leadId, onBack }: { leadId: string; onBack: () => void }) {
     setSubmitting(true); setErr(null)
 
     try {
-      const base64 = await fileToBase64(file)
+      const base64 = await compressImageToBase64(file)
       const res = await fetch('/api/submit-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          leadId, fileBase64: base64, contentType: file.type, fileName: file.name,
+          leadId, fileBase64: base64, contentType: 'image/jpeg', fileName: file.name,
           imageHash, aiResult: verifyResult,
           transactionId: (verifyResult as Record<string,unknown>)?.transactionId,
           amount: (verifyResult as Record<string,unknown>)?.amount,
@@ -287,6 +292,11 @@ function Step3({ leadId, onBack }: { leadId: string; onBack: () => void }) {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
+
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'Purchase', { value: COURSE_PRICE, currency: 'PKR' });
+      }
+
       setDone(true)
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Upload failed. Please try again.')
@@ -402,10 +412,30 @@ function Step3({ leadId, onBack }: { leadId: string; onBack: () => void }) {
 }
 
 // ── Util ───────────────────────────────────────────────────────────────────
-function fileToBase64(file: File): Promise<string> {
+function compressImageToBase64(file: File, maxWidth = 1200, quality = 0.7): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = () => resolve((reader.result as string).split(',')[1])
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width)
+          width = maxWidth
+        }
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return reject('No canvas context')
+        ctx.drawImage(img, 0, 0, width, height)
+        const dataUrl = canvas.toDataURL('image/jpeg', quality)
+        resolve(dataUrl.split(',')[1])
+      }
+      img.onerror = reject
+      img.src = e.target?.result as string
+    }
     reader.onerror = reject
     reader.readAsDataURL(file)
   })

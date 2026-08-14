@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import crypto from 'crypto'
+
+const hashData = (data: string) => crypto.createHash('sha256').update(data).digest('hex')
 
 export async function POST(req: NextRequest) {
   try {
@@ -80,6 +83,45 @@ export async function POST(req: NextRequest) {
 
     // Send WhatsApp notification to admin (via WhatsApp API link — manual trigger)
     // In production: integrate with WhatsApp Business API for auto-notify
+
+    // Send Facebook CAPI Purchase Event
+    try {
+      const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID
+      const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
+      if (PIXEL_ID && ACCESS_TOKEN && lead.email && lead.whatsapp) {
+        const hashedEmail = hashData(lead.email.toLowerCase().trim())
+        const digitsOnly = lead.whatsapp.replace(/\D/g, '')
+        const hashedPhone = digitsOnly ? hashData(digitsOnly) : undefined
+        
+        const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? req.headers.get('x-real-ip') ?? 'unknown'
+
+        await fetch(`https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            data: [
+              {
+                event_name: 'Purchase',
+                event_time: Math.floor(Date.now() / 1000),
+                action_source: 'website',
+                user_data: {
+                  em: [hashedEmail],
+                  ...(hashedPhone && { ph: [hashedPhone] }),
+                  client_ip_address: ip,
+                  client_user_agent: req.headers.get('user-agent') ?? '',
+                },
+                custom_data: {
+                  currency: 'PKR',
+                  value: 2900,
+                }
+              }
+            ]
+          })
+        })
+      }
+    } catch (fbErr) {
+      console.error('FB CAPI Error (Purchase):', fbErr)
+    }
 
     return NextResponse.json({ success: true })
   } catch (err) {
