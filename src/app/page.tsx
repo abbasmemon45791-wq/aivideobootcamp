@@ -639,24 +639,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Marquee ── */}
-      <div className="gradient-brand overflow-hidden border-y border-blue-400/30 py-3 text-white">
-        <div className="flex w-max animate-marquee gap-10 whitespace-nowrap text-sm font-semibold">
-          {[...Array(3)].flatMap(() => [
-            `✦ Intro Price Rs. ${PRICE.toLocaleString()}`,
-            `✦ ${SLOTS_LEFT} Slots Left`,
-            `✦ ${ENROLLED} Students Enrolled`,
-            '✦ Price Increasing Soon',
-            '✦ Free Bonus Tools Included',
-            '✦ 4-Module Refund Policy',
-          ]).map((item, i) => (
-            <span key={i} className="inline-flex items-center gap-3">
-              {item} <span className="opacity-40">•</span>
-            </span>
-          ))}
-        </div>
-      </div>
-
       {/* ── Community Section ── */}
       <section className="px-4 py-14 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-3xl text-center">
@@ -679,6 +661,24 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Marquee ── */}
+      <div className="gradient-brand overflow-hidden border-y border-blue-400/30 py-3 text-white">
+        <div className="flex w-max animate-marquee gap-10 whitespace-nowrap text-sm font-semibold">
+          {[...Array(3)].flatMap(() => [
+            `✦ Intro Price Rs. ${PRICE.toLocaleString()}`,
+            `✦ ${SLOTS_LEFT} Slots Left`,
+            `✦ ${ENROLLED} Students Enrolled`,
+            '✦ Price Increasing Soon',
+            '✦ Free Bonus Tools Included',
+            '✦ 4-Module Refund Policy',
+          ]).map((item, i) => (
+            <span key={i} className="inline-flex items-center gap-3">
+              {item} <span className="opacity-40">•</span>
+            </span>
+          ))}
+        </div>
+      </div>
 
       {/* ── Enrollment Pricing Card ── */}
       <section ref={enrollRef} id="enroll" className="px-4 py-16 sm:px-6 sm:py-24">
@@ -746,16 +746,7 @@ export default function HomePage() {
                 ))}
               </div>
 
-              {/* Guarantee */}
-              <div className="mt-6 flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <Shield className="h-10 w-10 shrink-0 text-blue-600" />
-                <div>
-                  <div className="font-['Sora'] font-bold text-slate-900">4-Module Money-Back Guarantee</div>
-                  <p className="mt-0.5 text-sm text-slate-500">
-                    Watch the first 4 modules. If you don&apos;t see value, we&apos;ll refund everything — no questions asked.
-                  </p>
-                </div>
-              </div>
+
             </div>
           </div>
           <BonusesBar />
