@@ -205,13 +205,12 @@ export default function HomePage() {
             Learn faceless YouTube automation, AI ad creation, and how to land high-paying global clients. No prior experience or expensive PC required. Land your first client during training or get your money back.
           </p>
 
-          <div className="mt-2 flex justify-center">
+          {/* <div className="mt-2 flex justify-center">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200/50 bg-blue-50 px-3 py-1 text-[11px] font-semibold text-blue-700">
               <span className="animate-bounce">👇</span> Watch the 3-minute intro below
             </span>
           </div>
 
-          {/* Video embed */}
           <div className="mx-auto mt-3 w-full max-w-3xl sm:mt-4">
             <div className="relative -mx-4 aspect-video overflow-hidden rounded-none border border-slate-200 bg-slate-900 shadow-glow sm:mx-0 sm:rounded-2xl">
               <iframe
@@ -222,7 +221,7 @@ export default function HomePage() {
                 allowFullScreen
               />
             </div>
-          </div>
+          </div> */}
 
           {/* CTAs */}
           <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
