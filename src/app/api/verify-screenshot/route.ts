@@ -74,20 +74,34 @@ Return ONLY valid JSON, no markdown, no explanation:
 
 Submitted at local time: ${localTime}`
 
+    const FALLBACK_MODELS = [
+      'gemini-3.7-flash',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-3.1-flash-lite',
+      'gemini-2.5-flash',
+      'gemini-flash-latest'
+    ]
+
     let result;
-    try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-3.7-flash' })
-      result = await model.generateContent([
-        prompt,
-        { inlineData: { mimeType: contentType, data: fileBase64 } },
-      ])
-    } catch (e) {
-      console.warn('Primary model failed, falling back to gemini-2.5-flash', e)
-      const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
-      result = await fallbackModel.generateContent([
-        prompt,
-        { inlineData: { mimeType: contentType, data: fileBase64 } },
-      ])
+    let lastError;
+    
+    for (const modelName of FALLBACK_MODELS) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName })
+        result = await model.generateContent([
+          prompt,
+          { inlineData: { mimeType: contentType, data: fileBase64 } },
+        ])
+        break; // Success!
+      } catch (e) {
+        console.warn(`Model ${modelName} failed, trying next...`)
+        lastError = e
+      }
+    }
+
+    if (!result) {
+      throw lastError || new Error("All Gemini models are currently unavailable.")
     }
 
     let aiResult: VerificationResult
