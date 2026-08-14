@@ -272,7 +272,7 @@ export default function HomePage() {
               <CheckCircle className="h-3.5 w-3.5" /> All sessions recorded
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
-              🎓 Hosted on Private LMS
+              🎓 Hosted on Skool
             </span>
           </div>
         </div>
