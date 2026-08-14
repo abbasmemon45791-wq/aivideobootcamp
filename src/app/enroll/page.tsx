@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, ArrowRight, User, Wallet, Upload, Check,
   Lock, LoaderCircle, Copy, Shield, Image as ImageIcon,
-  X, AlertCircle, CheckCircle, ChevronDown
+  X, AlertCircle, CheckCircle, ChevronDown, MessageCircle
 } from 'lucide-react'
 
 const COURSE_PRICE = 2900
@@ -292,23 +292,19 @@ function Step3({ leadId, onBack }: { leadId: string; onBack: () => void }) {
           style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>
           <Check className="h-8 w-8" />
         </div>
-        <h2 className="mt-4 font-[&#39;Sora&#39;] text-2xl font-extrabold"
+        <h2 className="mt-4 font-['Sora'] text-2xl font-extrabold"
           style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          You&apos;re In! 🎉
+          You&apos;re In!
         </h2>
-        <p className="mt-3 text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
-          Payment screenshot received! Our team will verify it within <strong>1 hour</strong>.
-          You&apos;ll receive your access link on <strong>WhatsApp & email</strong>.
+        <p className="mt-3 text-sm text-slate-800 font-semibold leading-relaxed max-w-sm mx-auto">
+          Payment screenshot received! Message us on WhatsApp now — we&apos;ll send you the final student form there so you can complete your enrollment.
         </p>
         <a href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent(`Hi! I've submitted my payment for the AI Bootcamp. My name is [Your Name]. Please confirm my enrollment.`)}`}
           target="_blank" rel="noopener noreferrer"
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-base font-semibold text-white shadow-lg transition-transform hover:scale-[1.02]">
-          <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 5.834h-.004c-1.271-.05-2.521-.349-3.67-.877l-.263-.119-2.727.716.73-2.66-.172-.273a7.53 7.53 0 0 1-1.16-4.03c0-4.188 3.406-7.592 7.594-7.592 4.188 0 7.592 3.404 7.592 7.592 0 4.188-3.404 7.593-7.592 7.593m6.743-13.831c-1.807-1.808-4.209-2.804-6.765-2.804-5.27 0-9.56 4.29-9.56 9.56 0 1.683.439 3.321 1.271 4.762l-1.351 4.94 5.051-1.324a9.55 9.55 0 0 0 4.589 1.173c5.27 0 9.56-4.29 9.56-9.56 0-2.556-.996-4.958-2.795-6.767" />
-          </svg>
-          Confirm on WhatsApp
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-4 text-base font-semibold text-white shadow-lg transition-transform hover:scale-[1.02]">
+          <MessageCircle className="h-5 w-5" />
+          Message us on WhatsApp
         </a>
-        <Link href="/" className="mt-3 block text-sm text-slate-400 hover:text-slate-600">← Back to Home</Link>
       </div>
     )
   }
