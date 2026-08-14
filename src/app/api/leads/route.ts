@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, whatsapp, city } = body
+    const { name, email, whatsapp } = body
 
     // Validation
     if (!name || name.trim().length < 2 || name.length > 100)
@@ -36,7 +36,6 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         email: email.toLowerCase().trim(),
         whatsapp: whatsapp.trim(),
-        city: city?.trim() || null,
         ip_address: ip,
         status: 'pending',
       })

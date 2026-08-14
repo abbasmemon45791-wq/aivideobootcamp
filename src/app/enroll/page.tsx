@@ -15,12 +15,6 @@ const HBL_ACCOUNT      = process.env.NEXT_PUBLIC_HBL_ACCOUNT      ?? '2256790222
 const ACCOUNT_TITLE    = process.env.NEXT_PUBLIC_ACCOUNT_TITLE    ?? 'Farman Ali'
 const WHATSAPP_SUPPORT = process.env.NEXT_PUBLIC_WHATSAPP_SUPPORT ?? '923180298090'
 
-const CITIES = [
-  'Lahore','Karachi','Islamabad','Rawalpindi','Faisalabad','Multan',
-  'Peshawar','Quetta','Sialkot','Gujranwala','Hyderabad','Bahawalpur',
-  'Abbottabad','Sargodha','Outside Pakistan','Other'
-]
-
 const STEP_LABELS: Record<number, string> = { 1: 'Your Details', 2: 'Send Payment', 3: 'Upload Proof' }
 
 // ── Step Indicator ─────────────────────────────────────────────────────────
@@ -57,7 +51,6 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
   const [name, setName]     = useState('')
   const [email, setEmail]   = useState('')
   const [wa, setWa]         = useState('')
-  const [city, setCity]     = useState('')
   const [err, setErr]       = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -73,7 +66,7 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), whatsapp: wa.trim(), city }),
+        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), whatsapp: wa.trim() }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -118,19 +111,6 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
           <input type="tel" value={wa} onChange={e => setWa(e.target.value)} maxLength={20}
             placeholder="03XXXXXXXXX" required
             className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
-        </label>
-
-        {/* City */}
-        <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">City</span>
-          <div className="relative">
-            <select value={city} onChange={e => setCity(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
-              <option value="">Select your city (optional)</option>
-              {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          </div>
         </label>
       </div>
 
