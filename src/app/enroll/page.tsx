@@ -140,22 +140,23 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
   )
 }
 
-// ── CopyField helper ───────────────────────────────────────────────────────
-function CopyField({ label, value }: { label: string; value: string }) {
+// ── BankRow helper ───────────────────────────────────────────────────────
+function BankRow({ bank, title, num }: { bank: string; title?: string; num: string }) {
   const [copied, setCopied] = useState(false)
   const copy = () => {
-    navigator.clipboard?.writeText(value)
+    navigator.clipboard?.writeText(num)
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
   }
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-slate-100 py-3 last:border-0">
+    <div className="flex items-center justify-between gap-3 border-b border-slate-200/60 py-3.5 last:border-0">
       <div className="min-w-0">
-        <div className="text-[11px] uppercase tracking-wider text-slate-400">{label}</div>
-        <div className="truncate font-semibold text-slate-800">{value}</div>
+        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{bank}</div>
+        {title && <div className="mt-0.5 text-xs text-slate-500">{title}</div>}
+        <div className="mt-0.5 text-sm font-semibold text-slate-800">{num}</div>
       </div>
       <button onClick={copy}
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100">
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white shadow-sm px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 hover:border-slate-300">
         {copied ? <><Check className="h-3.5 w-3.5 text-blue-600" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
       </button>
     </div>
@@ -178,33 +179,15 @@ function Step2({ onContinue, onBack }: { onContinue: () => void; onBack: () => v
         Send <strong className="text-slate-800 mx-1">exactly Rs. {COURSE_PRICE.toLocaleString()}</strong> (or nearest round figure) to the account below.
       </p>
 
-      {/* EasyPaisa */}
-      <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 px-4">
-        <div className="py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">EasyPaisa</div>
-        <CopyField label="Account Title" value={ACCOUNT_TITLE} />
-        <CopyField label="Account Number" value={EASYPAISA_NUMBER} />
-        <CopyField label="Amount" value={`Rs. ${COURSE_PRICE.toLocaleString()}`} />
+      {/* Payment Options */}
+      <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4">
+        <BankRow bank="EasyPaisa" title={ACCOUNT_TITLE} num={EASYPAISA_NUMBER} />
+        {JAZZCASH_NUMBER && <BankRow bank="JazzCash" num={JAZZCASH_NUMBER} />}
+        {HBL_ACCOUNT && <BankRow bank="HBL (Bank Transfer)" title={ACCOUNT_TITLE} num={HBL_ACCOUNT} />}
       </div>
 
-      {JAZZCASH_NUMBER && (
-        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-4">
-          <div className="py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">JazzCash</div>
-          <CopyField label="Account Number" value={JAZZCASH_NUMBER} />
-          <CopyField label="Amount" value={`Rs. ${COURSE_PRICE.toLocaleString()}`} />
-        </div>
-      )}
-
-      {HBL_ACCOUNT && (
-        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-4">
-          <div className="py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">HBL (Bank Transfer)</div>
-          <CopyField label="Account Title" value={ACCOUNT_TITLE} />
-          <CopyField label="Account Number" value={HBL_ACCOUNT} />
-          <CopyField label="Amount" value={`Rs. ${COURSE_PRICE.toLocaleString()}`} />
-        </div>
-      )}
-
-      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
-        <span className="font-semibold">Note:</span> Sending Rs. 2,950 or Rs. 3,000 is also fine — we verify the recipient account number, not the exact amount.
+      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs text-amber-700">
+        <span className="font-semibold">Note:</span> Sending Rs. 2,950 or Rs. 3,000 is also fine — we verify the recipient account, not the exact amount.
       </div>
 
       <button onClick={onContinue}
