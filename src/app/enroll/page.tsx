@@ -424,8 +424,8 @@ export default function EnrollPage() {
           <Link href="/" className="flex items-center gap-2.5">
             <div className="grid h-9 w-9 place-items-center rounded-xl font-bold text-sm text-white" style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>AI</div>
             <div className="leading-tight">
-              <div className="text-sm font-bold tracking-tight sm:text-base">TechPulse</div>
-              <div className="-mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600">AI Bootcamp</div>
+              <div className="text-sm font-bold tracking-tight sm:text-base">AI Bootcamp</div>
+              <div className="-mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600">Pakistan</div>
             </div>
           </Link>
           <Link href="/" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">

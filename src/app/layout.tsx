@@ -7,13 +7,13 @@ const sora = Sora({ subsets: ['latin'], variable: '--font-sora', weight: ['400',
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-jakarta', weight: ['500','600','700'] })
 
 export const metadata: Metadata = {
-  title: 'AI Video Bootcamp Pakistan — Earn $300–$15,000/Month',
-  description: "Pakistan's #1 AI Video Creator training. Learn AI-powered video ads in 10 days, land your first client during training — or get your money back.",
+  title: 'AI Video Bootcamp Pakistan — Learn & Earn in USD',
+  description: "Pakistan's #1 AI Video Creator training. Master AI ad generation, faceless YouTube automation, and client outreach in 10 days. Land your first paying client or your money back.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://yourdomain.com'),
   openGraph: {
     type: 'website',
     title: 'AI Video Bootcamp Pakistan',
-    description: 'Learn AI video ads, earn online. PKR 2,900 intro price. 726+ students enrolled.',
+    description: 'Master AI video generation and earn in USD. PKR 2,900 intro price. No experience needed.',
   },
   twitter: { card: 'summary_large_image' },
 }

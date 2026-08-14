@@ -95,42 +95,6 @@ function SocialProofToast() {
   )
 }
 
-// ── Countdown Timer ────────────────────────────────────────────────────────
-function Countdown() {
-  const [time, setTime] = useState<{ h: number; m: number; s: number } | null>(null)
-
-  useEffect(() => {
-    const key = 'bootcamp_deadline'
-    let deadline = parseInt(sessionStorage.getItem(key) ?? '0')
-    if (!deadline || deadline < Date.now()) {
-      deadline = Date.now() + 24 * 60 * 60 * 1000
-      sessionStorage.setItem(key, String(deadline))
-    }
-    const tick = () => {
-      const diff = Math.max(0, deadline - Date.now())
-      setTime({
-        h: Math.floor(diff / 3600000),
-        m: Math.floor((diff % 3600000) / 60000),
-        s: Math.floor((diff % 60000) / 1000),
-      })
-    }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  const pad = (n: number) => String(n).padStart(2, '0')
-
-  // Don't render on server — avoids hydration mismatch
-  if (!time) return <span className="inline-flex items-center gap-1 font-mono font-bold text-red-600"><Clock className="h-4 w-4" />--:--:--</span>
-
-  return (
-    <span className="inline-flex items-center gap-1 font-mono font-bold text-red-600 countdown-digit">
-      <Clock className="h-4 w-4" />
-      {pad(time.h)}:{pad(time.m)}:{pad(time.s)}
-    </span>
-  )
-}
 
 // ── Module Accordion ───────────────────────────────────────────────────────
 function ModuleAccordion() {
@@ -204,8 +168,8 @@ export default function HomePage() {
           <a href="#top" className="flex items-center gap-2.5">
             <div className="grid h-9 w-9 place-items-center rounded-xl gradient-brand text-white font-bold text-sm shadow-glow-sm">AI</div>
             <div className="leading-tight">
-              <div className="font-['Sora'] text-sm font-bold tracking-tight sm:text-base">TechPulse</div>
-              <div className="-mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600">AI Bootcamp</div>
+              <div className="font-['Sora'] text-sm font-bold tracking-tight sm:text-base">AI Bootcamp</div>
+              <div className="-mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600">Pakistan</div>
             </div>
           </a>
 
@@ -228,26 +192,17 @@ export default function HomePage() {
       <section id="top" className="hero-bg relative overflow-hidden dot-grid">
         <div className="mx-auto max-w-6xl px-4 pb-10 pt-8 text-center sm:px-6 sm:pb-14 sm:pt-12 md:pt-10">
 
-          {/* Urgency banner */}
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-            <Flame className="h-3.5 w-3.5" />
-            Price rises in: <Countdown />
-          </div>
 
           <span className="inline-flex items-center gap-2 rounded-full border border-blue-200/60 bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-blue-700 shadow-sm backdrop-blur sm:text-xs">
             🇵🇰 Pakistan&apos;s #1 AI Creative Training
           </span>
 
           <h1 className="mx-auto mt-3 max-w-4xl text-balance font-['Sora'] text-[28px] font-bold leading-[1.15] tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
-            Become an{' '}
-            <span className="text-gradient">AI Video Creator</span>
-            {' '}in 10 Days —{' '}
-            Start Earning with a Skill the World is Paying For
+            Master <span className="text-gradient">AI Video Generation</span> in 10 Days — Start Earning in USD
           </h1>
 
-          <p className="mx-auto mt-3 max-w-2xl text-balance text-sm leading-relaxed text-slate-500 sm:text-base">
-            Create viral AI videos for ads, social pages, and YouTube — even with free tools.
-            Land your first client during training or get your money back.
+          <p className="mx-auto mt-4 max-w-2xl text-balance text-sm leading-relaxed text-slate-500 sm:text-base">
+            Learn faceless YouTube automation, AI ad creation, and how to land high-paying global clients. No prior experience or expensive PC required. Land your first client during training or get your money back.
           </p>
 
           <div className="mt-2 flex justify-center">
@@ -342,10 +297,10 @@ export default function HomePage() {
       <section className="px-4 py-14 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-['Sora'] text-2xl font-bold text-slate-900 sm:text-3xl md:text-4xl">
-            A Community of <span className="text-gradient">{ENROLLED} AI Creators</span>
+            Join <span className="text-gradient">{ENROLLED} Creators</span> Earning Online
           </h2>
           <p className="mt-2 text-sm text-slate-500 sm:text-base">
-            Real students. Real results. Active support community.
+            Real students. Real income. Active support community to help you land clients.
           </p>
           <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-glow sm:rounded-3xl">
             <div className="flex items-center justify-center py-20 text-slate-400 text-sm">
@@ -557,10 +512,10 @@ export default function HomePage() {
         <div className="mx-auto max-w-3xl text-center">
           <Sparkles className="mx-auto h-10 w-10 mb-4 opacity-80" />
           <h2 className="font-['Sora'] text-3xl font-bold sm:text-4xl">
-            Your Next 10 Days Can Change Everything
+            Ready to Start Earning in USD?
           </h2>
           <p className="mt-3 text-base text-blue-100 sm:text-lg">
-            {SLOTS_LEFT} seats left at Rs. {PRICE.toLocaleString()}. Price goes to Rs. {ORIGINAL_PRICE.toLocaleString()} after this batch.
+            {SLOTS_LEFT} seats left at Rs. {PRICE.toLocaleString()}. Join today and learn the high-income skill of 2026.
           </p>
           <Link
             href="/enroll"
@@ -577,9 +532,9 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
           <div className="flex items-center gap-3">
             <div className="grid h-9 w-9 place-items-center rounded-xl gradient-brand text-white font-bold text-sm">AI</div>
-            <div className="font-['Sora'] text-sm font-bold text-white">TechPulse AI Bootcamp</div>
+            <div className="font-['Sora'] text-sm font-bold text-white">AI Bootcamp Pakistan</div>
           </div>
-          <div className="text-xs text-white/40">© 2026 TechPulse AI Bootcamp. All rights reserved.</div>
+          <div className="text-xs text-white/40">© 2026 AI Bootcamp Pakistan. All rights reserved.</div>
         </div>
       </footer>
 
@@ -589,7 +544,7 @@ export default function HomePage() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat on WhatsApp"
-        className="fixed bottom-4 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform hover:scale-110 hover:shadow-xl"
+        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform hover:scale-110 hover:shadow-xl sm:bottom-6 sm:right-6"
       >
         <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 5.834h-.004c-1.271-.05-2.521-.349-3.67-.877l-.263-.119-2.727.716.73-2.66-.172-.273a7.53 7.53 0 0 1-1.16-4.03c0-4.188 3.406-7.592 7.594-7.592 4.188 0 7.592 3.404 7.592 7.592 0 4.188-3.404 7.593-7.592 7.593m6.743-13.831c-1.807-1.808-4.209-2.804-6.765-2.804-5.27 0-9.56 4.29-9.56 9.56 0 1.683.439 3.321 1.271 4.762l-1.351 4.94 5.051-1.324a9.55 9.55 0 0 0 4.589 1.173c5.27 0 9.56-4.29 9.56-9.56 0-2.556-.996-4.958-2.795-6.767" />
