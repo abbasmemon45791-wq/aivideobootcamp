@@ -56,7 +56,7 @@ RULES:
 - Extract the exact amount transferred
 - Extract the transaction ID or reference number
 - Extract the timestamp of the transaction
-- Determine if this is a genuine payment receipt (not a screenshot of a screenshot, not edited)
+- Determine if this is a genuine payment receipt. You MUST rigorously check for signs of manipulation, photo editing, text-overlay, AI generation, or if it is a screenshot of a screenshot. If it looks fake, tampered with, or AI generated, set valid to false and provide a reason.
 
 Return ONLY valid JSON, no markdown, no explanation:
 {
