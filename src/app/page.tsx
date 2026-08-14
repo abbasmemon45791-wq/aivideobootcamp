@@ -418,6 +418,60 @@ function BonusesBar() {
   )
 }
 
+const SKOOL_TESTIMONIALS = [
+  { title: "First AI Ad Order", tag: "Client Work", desc: "Student ne apna pehla paid AI ad order close kiya — seekha hua skill direct income mein convert hua.", image: "/skool-1.png" },
+  { title: "Lectures Easy to Follow", tag: "Course Quality", desc: "Module 2 ka LLM lecture simple aur clear laga — beginners ke liye bhi samajhna asaan.", image: "/skool-2.png" },
+  { title: "First Realistic AI Creation", tag: "Student Result", desc: "4th lecture ke baad realistic AI visuals banane shuru — practical results, sirf theory nahi.", image: "/skool-3.png" },
+  { title: "Happy to Be Part of It", tag: "Community", desc: "Long-term plan lene ke baad community mein active participation aur clear faida.", image: "/skool-4.png" },
+  { title: "Mentor Support That Cares", tag: "Mentorship", desc: "Mentor guidance aur support ki wajah se students ka confidence aur speed dono barhi.", image: "/skool-5.png" },
+  { title: "2 Din Mein Hi Maza Aa Gaya", tag: "New Student", desc: "Naye student ko har lecture mein maza aa raha hai — kaafi kuch aisa seekha jo pehle pata hi nahi tha.", image: "/skool-6.png" },
+  { title: "Best Investment I Made This Year!", tag: "Best Investment", desc: "Sirf 2 modules dekhne ke baad student keh raha hai ye investment har penny ke qabil — realistic teaching ne motivation double kar di.", image: "/skool-7.png" },
+  { title: "1st Ad — AI Model in a Real Office", tag: "Student Result", desc: "Student ne apna pehla AI ad banaya — cousin ke real office mein AI model place karke professional result nikala.", image: "/skool-8.png" },
+  { title: "Definitely Worth the Investment", tag: "New Student", desc: "Online buying thoda risky lagta hai, lekin ye course definitely worth it hai. Abhi join kiya aur is journey ka part banke excited hun.", image: "/skool-9.png", fullWidth: true }
+]
+
+function SkoolTestimonials() {
+  return (
+    <section className="bg-[#fafafa] px-4 py-16 sm:px-6 sm:py-24">
+      <div className="mx-auto max-w-6xl">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/80 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600 mb-4">
+            Real Community Feedback
+          </div>
+          <h2 className="font-['Sora'] text-3xl font-bold tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-5xl">
+            What Our Students Are Saying
+          </h2>
+          <p className="mt-4 text-sm text-slate-600 sm:text-lg max-w-2xl mx-auto leading-relaxed">
+            Ye sab posts hamari private Skool community se hain — <span className="font-semibold text-slate-900">726+ AI creators</span> ke real results aur experiences.
+          </p>
+        </div>
+        
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {SKOOL_TESTIMONIALS.map((t, i) => (
+            <div key={i} className={`flex flex-col rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 shadow-glass card-premium-hover ${t.fullWidth ? 'md:col-span-2 max-w-4xl mx-auto w-full' : ''}`}>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h3 className="font-['Sora'] text-lg font-bold text-slate-900">{t.title}</h3>
+                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">{t.tag}</span>
+              </div>
+              <p className="text-sm text-slate-600 leading-relaxed mb-6">{t.desc}</p>
+              
+              <div className="mt-auto w-full rounded-xl overflow-hidden border border-slate-100 shadow-sm bg-white">
+                <div className="aspect-[16/9] w-full relative bg-slate-50 flex items-center justify-center">
+                  <div className="text-slate-400 text-xs flex flex-col items-center gap-2">
+                    <Image className="opacity-20" src="/file.svg" alt="placeholder" width={24} height={24} />
+                    <span>Upload {t.image}</span>
+                  </div>
+                  {/* <Image src={t.image} alt={t.title} fill className="object-cover" /> */}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────
 export default function HomePage() {
   const [headerScrolled, setHeaderScrolled] = useState(false)
@@ -784,6 +838,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Skool Testimonials ── */}
+      <SkoolTestimonials />
 
       {/* ── Final CTA ── */}
       <section className="gradient-brand px-4 py-16 text-white sm:px-6 sm:py-24">
