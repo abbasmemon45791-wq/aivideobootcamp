@@ -45,8 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Layer 2: Gemini Flash Vision AI Verification ──────────────────────
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.7-flash' })
-
+    // ── Layer 2: Gemini Flash Vision AI Verification ──────────────────────
     const prompt = `You are a payment verification system for a Pakistani online course.
 Analyze this payment screenshot and extract the following information as JSON.
 
@@ -75,10 +74,21 @@ Return ONLY valid JSON, no markdown, no explanation:
 
 Submitted at local time: ${localTime}`
 
-    const result = await model.generateContent([
-      prompt,
-      { inlineData: { mimeType: contentType, data: fileBase64 } },
-    ])
+    let result;
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-3.7-flash' })
+      result = await model.generateContent([
+        prompt,
+        { inlineData: { mimeType: contentType, data: fileBase64 } },
+      ])
+    } catch (e) {
+      console.warn('Primary model failed, falling back to gemini-2.5-flash', e)
+      const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+      result = await fallbackModel.generateContent([
+        prompt,
+        { inlineData: { mimeType: contentType, data: fileBase64 } },
+      ])
+    }
 
     let aiResult: VerificationResult
     try {
