@@ -155,6 +155,9 @@ export default function HomePage() {
   const enrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'ViewContent')
+    }
     const onScroll = () => setHeaderScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
