@@ -6,7 +6,8 @@ import {
   Flame, Sparkles, CheckCircle, ArrowRight, ArrowDown,
   ChevronDown, Shield, Clock, Users, Star, Zap, Play,
   TrendingUp, Lock, Infinity, RefreshCw, MonitorSmartphone,
-  HeadphonesIcon, CalendarDays, Wallet, CirclePlay, X
+  HeadphonesIcon, CalendarDays, Wallet, CirclePlay, X,
+  Briefcase, DollarSign, GraduationCap, Rocket
 } from 'lucide-react'
 
 // ── Config ────────────────────────────────────────────────────────────────
@@ -472,6 +473,44 @@ function SkoolTestimonials() {
   )
 }
 
+// ── Who Is This For ────────────────────────────────────────────────────────
+const AUDIENCES = [
+  { icon: <Sparkles className="h-5 w-5 text-white" />, title: 'Beginner', desc: 'Zero experience? Start here. Roman Urdu friendly.' },
+  { icon: <Briefcase className="h-5 w-5 text-white" />, title: 'Freelancer', desc: 'Add AI to your stack and 3x your rates.' },
+  { icon: <Users className="h-5 w-5 text-white" />, title: 'Business Owner', desc: 'Cut creative costs and ship ads in-house.' },
+  { icon: <DollarSign className="h-5 w-5 text-white" />, title: 'Dollar Earner', desc: 'International clients with Wise/Payoneer payouts.' },
+  { icon: <GraduationCap className="h-5 w-5 text-white" />, title: 'Student', desc: 'Side income while you study. Mobile-friendly.' },
+  { icon: <Rocket className="h-5 w-5 text-white" />, title: 'Creator', desc: 'Build a faceless brand that scales globally.' },
+]
+
+function WhoIsThisFor() {
+  return (
+    <section className="bg-white px-4 py-16 sm:px-6 sm:py-24">
+      <div className="mx-auto max-w-5xl">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
+            Who It's For
+          </div>
+          <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl">
+            If any of these is you — you're in
+          </h2>
+        </div>
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {AUDIENCES.map((aud, i) => (
+            <div key={i} className="rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 shadow-glass card-premium-hover">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-blue-500">
+                {aud.icon}
+              </div>
+              <h3 className="mt-5 font-['Sora'] text-lg font-bold text-slate-900">{aud.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-500">{aud.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────
 export default function HomePage() {
   const [headerScrolled, setHeaderScrolled] = useState(false)
@@ -827,11 +866,16 @@ export default function HomePage() {
       <OutcomesGrid />
       <IncomeAndRoadmap />
 
+      <WhoIsThisFor />
+
       {/* ── FAQ ── */}
       <section className="bg-slate-50 px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-3xl">
           <div className="text-center">
-            <h2 className="font-['Sora'] text-2xl font-bold text-slate-900 sm:text-3xl">Frequently Asked Questions</h2>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600 mb-4">
+              FAQ
+            </div>
+            <h2 className="font-['Sora'] text-3xl font-bold text-slate-900 sm:text-4xl">Everything you need to know</h2>
           </div>
           <div className="mt-8">
             <FAQ />
@@ -843,22 +887,36 @@ export default function HomePage() {
       {/* <SkoolTestimonials /> */}
 
       {/* ── Final CTA ── */}
-      <section className="gradient-brand px-4 py-16 text-white sm:px-6 sm:py-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <Sparkles className="mx-auto h-10 w-10 mb-4 opacity-80" />
-          <h2 className="font-['Sora'] text-3xl font-bold sm:text-4xl">
-            Ready to Start Earning in USD?
+      <section className="bg-[#0F172A] px-4 py-16 text-white sm:px-6 sm:py-24">
+        <div className="mx-auto max-w-4xl text-center">
+          <Clock className="mx-auto h-8 w-8 mb-6 text-cyan-400" />
+          <h2 className="font-['Sora'] text-3xl font-bold leading-tight sm:text-5xl">
+            Every day you wait is a day <span className="text-blue-400">someone else</span> takes your client.
           </h2>
-          <p className="mt-3 text-base text-blue-100 sm:text-lg">
-            {SLOTS_LEFT} seats left at Rs. {PRICE.toLocaleString()}. Join today and learn the high-income skill of 2026.
+          <Link
+            href="/enroll"
+            className="mt-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 px-8 py-3.5 text-base font-semibold text-white shadow-lg transition-transform hover:scale-105"
+          >
+            Enroll Now <ArrowRight className="h-5 w-5" />
+          </Link>
+        </div>
+      </section>
+
+      <section className="bg-white px-4 py-16 sm:px-6 sm:py-24">
+        <div className="mx-auto max-w-3xl text-center">
+          <Zap className="mx-auto h-8 w-8 mb-4 text-blue-600" />
+          <h2 className="font-['Sora'] text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl">
+            Start <span className="text-blue-500">today.</span>
+          </h2>
+          <p className="mt-4 text-sm text-slate-500 sm:text-base max-w-md mx-auto">
+            Rs. {PRICE.toLocaleString()} today. Lifetime access. Money-back if you don't land a client during training.
           </p>
           <Link
             href="/enroll"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-base font-semibold text-blue-600 shadow-xl transition-transform hover:scale-[1.03]"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 px-8 py-3.5 text-base font-semibold text-white shadow-lg transition-transform hover:scale-105"
           >
-            Enroll Now — Rs. {PRICE.toLocaleString()} <ArrowRight className="h-5 w-5" />
+            Enroll Now <ArrowRight className="h-5 w-5" />
           </Link>
-          <p className="mt-3 text-sm text-blue-200">4-module money-back guarantee · Lifetime access</p>
         </div>
       </section>
 
