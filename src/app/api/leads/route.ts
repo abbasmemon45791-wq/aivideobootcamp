@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     // Send Facebook CAPI Lead Event
     try {
-      const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID
+      const PIXEL_ID = '2170349516868440'
       const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
       if (PIXEL_ID && ACCESS_TOKEN) {
         const hashedEmail = hashData(email.toLowerCase().trim())
