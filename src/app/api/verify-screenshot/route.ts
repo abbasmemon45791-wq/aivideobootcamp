@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Layer 2: Gemini Flash Vision AI Verification ──────────────────────
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.7-flash' })
 
     const prompt = `You are a payment verification system for a Pakistani online course.
 Analyze this payment screenshot and extract the following information as JSON.
