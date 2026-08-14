@@ -141,7 +141,7 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
 }
 
 // ── BankRow helper ───────────────────────────────────────────────────────
-function BankRow({ bank, title, num }: { bank: string; title?: string; num: string }) {
+function BankRow({ bank, title, num, colorClass = "text-slate-500" }: { bank: string; title?: string; num: string; colorClass?: string }) {
   const [copied, setCopied] = useState(false)
   const copy = () => {
     navigator.clipboard?.writeText(num)
@@ -149,15 +149,15 @@ function BankRow({ bank, title, num }: { bank: string; title?: string; num: stri
     setTimeout(() => setCopied(false), 1500)
   }
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-slate-200/60 py-3.5 last:border-0">
+    <div className="flex items-center justify-between gap-3 border-b border-slate-200/60 py-4 last:border-0">
       <div className="min-w-0">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{bank}</div>
+        <div className={`text-[11px] font-bold uppercase tracking-wider ${colorClass}`}>{bank}</div>
         {title && <div className="mt-0.5 text-xs text-slate-500">{title}</div>}
-        <div className="mt-0.5 text-sm font-semibold text-slate-800">{num}</div>
+        <div className="mt-1 text-sm font-semibold tracking-wide text-slate-800 sm:text-base">{num}</div>
       </div>
       <button onClick={copy}
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white shadow-sm px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 hover:border-slate-300">
-        {copied ? <><Check className="h-3.5 w-3.5 text-blue-600" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white shadow-sm px-4 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 hover:border-slate-300 sm:px-3 sm:py-1.5">
+        {copied ? <><Check className="h-4 w-4 text-blue-600 sm:h-3.5 sm:w-3.5" /> Copied</> : <><Copy className="h-4 w-4 sm:h-3.5 sm:w-3.5" /> Copy</>}
       </button>
     </div>
   )
@@ -180,10 +180,10 @@ function Step2({ onContinue, onBack }: { onContinue: () => void; onBack: () => v
       </p>
 
       {/* Payment Options */}
-      <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4">
-        <BankRow bank="EasyPaisa" title={ACCOUNT_TITLE} num={EASYPAISA_NUMBER} />
-        {JAZZCASH_NUMBER && <BankRow bank="JazzCash" num={JAZZCASH_NUMBER} />}
-        {HBL_ACCOUNT && <BankRow bank="HBL (Bank Transfer)" title={ACCOUNT_TITLE} num={HBL_ACCOUNT} />}
+      <div className="mt-5 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm">
+        <BankRow bank="EasyPaisa" title={ACCOUNT_TITLE} num={EASYPAISA_NUMBER} colorClass="text-emerald-600" />
+        {JAZZCASH_NUMBER && <BankRow bank="JazzCash" num={JAZZCASH_NUMBER} colorClass="text-rose-600" />}
+        {HBL_ACCOUNT && <BankRow bank="HBL (Bank Transfer)" title={ACCOUNT_TITLE} num={HBL_ACCOUNT} colorClass="text-teal-700" />}
       </div>
 
       <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs text-amber-700">
