@@ -133,16 +133,16 @@ function FAQ() {
   return (
     <div className="space-y-2">
       {FAQS.map((faq, i) => (
-        <div key={i} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div key={i} className={`overflow-hidden rounded-xl border transition-colors duration-300 ${open === i ? 'border-blue-200 bg-blue-50/40 shadow-sm' : 'border-slate-200 bg-white'}`}>
           <button
             onClick={() => setOpen(open === i ? null : i)}
-            className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-sm font-semibold text-slate-800"
+            className={`flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left text-sm font-semibold transition-colors duration-300 ${open === i ? 'text-blue-700' : 'text-slate-800'}`}
           >
             {faq.q}
-            <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open === i ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-300 ${open === i ? 'rotate-180 text-blue-600' : 'text-slate-400'}`} />
           </button>
           {open === i && (
-            <div className="border-t border-slate-100 px-4 py-3 text-sm leading-relaxed text-slate-600">{faq.a}</div>
+            <div className="border-t border-slate-200/50 px-4 py-3 text-sm leading-relaxed text-slate-600">{faq.a}</div>
           )}
         </div>
       ))}
@@ -310,12 +310,12 @@ function OutcomesGrid() {
         <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
           Outcomes
         </div>
-        <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+        <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl">
           By the end of this course, you<br />will be able to:
         </h2>
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {OUTCOMES.map((o, i) => (
-            <div key={i} className="flex flex-col items-start rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+            <div key={i} className="flex flex-col items-start rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 text-left shadow-glass card-premium-hover">
               <div className="text-3xl">{o.icon}</div>
               <h3 className="mt-4 font-['Sora'] font-bold text-slate-900">{o.title}</h3>
               <div className="mt-1 text-sm font-bold text-blue-600">{o.price}</div>
@@ -345,13 +345,13 @@ function IncomeAndRoadmap() {
           <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
             Income Potential
           </div>
-          <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl">
             What students earn in 14 days
           </h2>
         </div>
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {INCOMES.map((inc, i) => (
-            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div key={i} className="rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 shadow-glass card-premium-hover">
               <div className="grid h-10 w-10 place-items-center rounded-full bg-blue-500">
                 {inc.icon}
               </div>
@@ -367,7 +367,7 @@ function IncomeAndRoadmap() {
           <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
             14-Day Roadmap
           </div>
-          <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl">
             From zero to first paycheck
           </h2>
         </div>
@@ -378,7 +378,7 @@ function IncomeAndRoadmap() {
             { day: 'DAY 10-13', step: '03', title: 'First Client', desc: 'Outreach scripts + DMs. Sign your first paying brand.' },
             { day: 'DAY 14', step: '04', title: 'Scale', desc: 'Retainer + faceless brand. $1K-$5K monthly target.' },
           ].map((r, i) => (
-            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm relative pt-10">
+            <div key={i} className="rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 shadow-glass card-premium-hover relative pt-10">
               <div className="absolute -top-3 left-6 rounded-full bg-[#1A233A] px-3 py-1 text-[10px] font-bold text-white uppercase tracking-widest">
                 {r.day}
               </div>
@@ -453,7 +453,7 @@ export default function HomePage() {
 
           <Link
             href="/enroll"
-            className="gradient-brand inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-white shadow-glow transition-transform hover:scale-[1.03] sm:text-sm"
+            className="btn-premium inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-white sm:text-sm"
           >
             Enroll Now <ArrowRight className="h-4 w-4" />
           </Link>
@@ -469,7 +469,7 @@ export default function HomePage() {
             🇵🇰 Pakistan&apos;s #1 AI Creative Training
           </span>
 
-          <h1 className="mx-auto mt-3 max-w-4xl text-balance font-['Sora'] text-[28px] font-bold leading-[1.15] tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
+          <h1 className="mx-auto mt-3 max-w-4xl text-balance font-['Sora'] text-[28px] font-bold leading-[1.15] tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl md:text-5xl">
             Master <span className="text-gradient">AI Video Generation</span> in 10 Days — Start Earning in USD
           </h1>
 
@@ -499,7 +499,7 @@ export default function HomePage() {
           <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/enroll"
-              className="gradient-brand inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold text-white shadow-glow transition-transform hover:scale-[1.03] sm:w-auto sm:text-base"
+              className="btn-premium inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold text-white sm:w-auto sm:text-base"
             >
               Enroll Now — PKR {PRICE.toLocaleString()} <ArrowRight className="h-5 w-5" />
             </Link>
@@ -580,7 +580,7 @@ export default function HomePage() {
             <Image src="/community.png" alt="AI Bootcamp PK Skool Community" width={1200} height={800} className="w-full h-auto object-cover" />
           </div>
           <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/enroll" className="gradient-brand inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold text-white shadow-glow transition-transform hover:scale-[1.02] sm:w-auto">
+            <Link href="/enroll" className="btn-premium inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold text-white sm:w-auto">
               Enroll Now — PKR {PRICE.toLocaleString()} <ArrowRight className="h-5 w-5" />
             </Link>
             <a href="#reviews" className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto">
@@ -627,7 +627,7 @@ export default function HomePage() {
 
               <Link
                 href="/enroll"
-                className="gradient-brand mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white shadow-glow transition-transform hover:scale-[1.02]"
+                className="btn-premium mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white"
               >
                 Secure Your Seat Now <ArrowRight className="h-5 w-5" />
               </Link>
@@ -679,7 +679,7 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
               Success Stories
             </div>
-            <h2 className="mt-3 font-['Sora'] text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            <h2 className="mt-3 font-['Sora'] text-3xl font-bold tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl">
               Our Previous Batch Results
             </h2>
           </div>
@@ -689,7 +689,7 @@ export default function HomePage() {
               { stat: '2.8M', desc: 'Views on a single AI podcast video. Faceless, no camera needed.', tag: 'Viral' },
               { stat: 'Rs. 15,000', desc: 'First client project closed within 9 days of completing the course.', tag: 'Client Work' },
             ].map((story, i) => (
-              <div key={i} className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div key={i} className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 shadow-glass card-premium-hover">
                 <div className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">{story.tag}</div>
                 <div className="mt-3 font-['Sora'] text-3xl font-extrabold text-gradient">{story.stat}</div>
                 <p className="mt-2 text-sm leading-relaxed text-slate-500">{story.desc}</p>
@@ -755,7 +755,7 @@ export default function HomePage() {
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {REVIEWS.map((r, i) => (
-              <div key={i} className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+              <div key={i} className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-5 shadow-glass card-premium-hover">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="font-semibold text-slate-900">{r.name}</div>
