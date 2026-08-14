@@ -6,10 +6,11 @@ import type { VerificationResult } from '@/types'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
-// Your EasyPaisa / JazzCash account numbers
+// Your EasyPaisa / JazzCash / HBL account numbers
 const VALID_RECIPIENT_NUMBERS = [
-  process.env.EASYPAISA_NUMBER ?? '',
-  process.env.JAZZCASH_NUMBER ?? '',
+  process.env.NEXT_PUBLIC_EASYPAISA_NUMBER ?? '',
+  process.env.NEXT_PUBLIC_JAZZCASH_NUMBER ?? '',
+  process.env.NEXT_PUBLIC_HBL_ACCOUNT ?? '',
 ].filter(Boolean)
 
 const COURSE_PRICE = parseInt(process.env.COURSE_PRICE ?? '2900')
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
       .from('payments')
       .select('id, lead_id')
       .eq('image_hash', imageHash)
-      .single()
+      .maybeSingle()
 
     if (dupCheck) {
       return NextResponse.json({
@@ -131,7 +132,7 @@ Submitted at local time: ${localTime}`
         .from('payments')
         .select('id')
         .eq('transaction_id', aiResult.transaction_id)
-        .single()
+        .maybeSingle()
 
       if (txDup) {
         validationErrors.push('This transaction ID has already been used. Please contact us on WhatsApp if you think this is an error.')
@@ -157,7 +158,7 @@ Submitted at local time: ${localTime}`
     console.error('[POST /api/verify-screenshot]', err)
     return NextResponse.json({
       valid: false,
-      reason: 'Verification failed. Please try again or contact support.',
+      reason: err instanceof Error ? `System Error: ${err.message}` : 'Verification failed. Please try again or contact support.',
     }, { status: 500 })
   }
 }

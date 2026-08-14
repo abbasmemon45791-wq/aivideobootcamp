@@ -15,7 +15,7 @@ async function verifyAdmin(req: NextRequest) {
     .select('token')
     .eq('token', token)
     .gt('expires_at', new Date().toISOString())
-    .single()
+    .maybeSingle()
   return !!data
 }
 

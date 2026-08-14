@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       .from('leads')
       .select('id, name, email, whatsapp, status')
       .eq('id', leadId)
-      .single()
+      .maybeSingle()
 
     if (!lead) {
       return NextResponse.json({ error: 'Lead not found.' }, { status: 404 })

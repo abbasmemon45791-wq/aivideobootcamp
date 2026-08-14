@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       .select('id, status')
       .eq('email', email.toLowerCase().trim())
       .in('status', ['pending', 'payment_submitted', 'approved'])
-      .single()
+      .maybeSingle()
 
     if (existing) {
       return NextResponse.json({ id: existing.id, existing: true })
