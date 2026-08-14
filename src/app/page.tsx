@@ -555,7 +555,7 @@ export default function HomePage() {
 
       {/* ── Hero ── */}
       <section id="top" className="hero-bg relative overflow-hidden dot-grid">
-        <div className="mx-auto max-w-6xl px-4 pb-10 pt-8 text-center sm:px-6 sm:pb-14 sm:pt-12 md:pt-10">
+        <div className="mx-auto max-w-6xl px-4 pb-6 pt-8 text-center sm:px-6 sm:pb-8 sm:pt-12 md:pt-10">
 
 
           <span className="inline-flex items-center gap-2 rounded-full border border-blue-200/60 bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-blue-700 shadow-sm backdrop-blur sm:text-xs">
@@ -640,7 +640,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Community Section ── */}
-      <section className="px-4 py-14 sm:px-6 sm:py-20">
+      <section className="px-4 pt-8 pb-14 sm:px-6 sm:pt-10 sm:pb-20">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-['Sora'] text-2xl font-bold text-slate-900 sm:text-3xl md:text-4xl">
             Inside the <span className="text-gradient">AI Bootcamp PK</span> Skool Community
