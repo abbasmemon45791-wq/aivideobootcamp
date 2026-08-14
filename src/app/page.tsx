@@ -150,6 +150,274 @@ function FAQ() {
   )
 }
 
+// ── WhatsApp Mockups ───────────────────────────────────────────────────────
+function WhatsAppChat({ name, avatarInitial, messages }: { name: string, avatarInitial: string, messages: any[] }) {
+  return (
+    <div className="mx-auto w-full max-w-[320px] overflow-hidden rounded-[2.5rem] border-8 border-slate-900 bg-[#0B141A] shadow-2xl">
+      {/* Status Bar */}
+      <div className="flex items-center justify-between px-6 pt-3 text-[10px] font-medium text-white">
+        <span>4:16</span>
+        <div className="flex items-center gap-1">
+          <div className="h-2 w-2 rounded-full bg-white/80" />
+          <div className="h-2 w-3 rounded-[2px] bg-white/80" />
+        </div>
+      </div>
+      
+      {/* Header */}
+      <div className="flex items-center gap-3 bg-[#202C33] px-3 py-2">
+        <ArrowRight className="h-5 w-5 rotate-180 text-white" />
+        <div className="grid h-9 w-9 place-items-center rounded-full bg-slate-600 font-bold text-white">
+          {avatarInitial}
+        </div>
+        <div className="flex-1">
+          <div className="font-semibold text-white text-sm">{name}</div>
+          <div className="text-[10px] text-white/70">online</div>
+        </div>
+        <div className="flex gap-4 pr-2 text-white">
+          <MonitorSmartphone className="h-4 w-4" />
+          <HeadphonesIcon className="h-4 w-4" />
+        </div>
+      </div>
+
+      {/* Chat Area */}
+      <div className="flex h-[500px] flex-col gap-2 overflow-y-auto bg-[#0B141A] p-3 pb-6 relative" style={{ backgroundImage: "url('https://static.whatsapp.net/rsrc.php/v3/yl/r/119h9eZ0W9N.png')", backgroundSize: 'cover', opacity: 0.95 }}>
+        {messages.map((msg, i) => (
+          <div key={i} className={`flex ${msg.isMe ? 'justify-end' : 'justify-start'}`}>
+            <div className={`relative max-w-[85%] rounded-lg p-1.5 ${msg.isMe ? 'bg-[#005C4B] text-white' : 'bg-[#202C33] text-white'}`}>
+              {msg.image && (
+                <div className="mb-1 overflow-hidden rounded border border-white/10 bg-slate-800 text-center">
+                  {msg.image}
+                </div>
+              )}
+              {msg.text && (
+                <div className="px-1 text-[13px] leading-snug">
+                  {msg.text}
+                </div>
+              )}
+              <div className="flex items-center justify-end gap-1 px-1 pt-1 text-[9px] text-white/60">
+                <span>{msg.time}</span>
+                {msg.isMe && <CheckCircle className="h-3 w-3 text-sky-400" />}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Input */}
+      <div className="flex items-center gap-2 bg-[#202C33] p-2">
+        <div className="flex-1 rounded-full bg-[#2A3942] px-4 py-2 text-sm text-white/50">Message</div>
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#00A884]">
+          <Mic className="h-5 w-5 text-white" />
+        </div>
+      </div>
+    </div>
+  )
+}
+import { Mic } from 'lucide-react';
+
+function WhatsAppTestimonials() {
+  return (
+    <div className="flex flex-col gap-8 sm:flex-row sm:justify-center">
+      <WhatsAppChat
+        name="Kashif batch 1"
+        avatarInitial="K"
+        messages={[
+          {
+            isMe: false,
+            time: '4:13 PM',
+            image: (
+              <div className="flex h-48 w-full flex-col items-center justify-center bg-white text-slate-800 p-2">
+                <div className="text-[10px] font-bold text-slate-400 w-full text-left">Earnings</div>
+                <div className="text-2xl font-bold mt-2">$194.02</div>
+                <div className="text-[10px] text-emerald-500 font-semibold mt-1">↑ 100% from previous 28 days</div>
+                <div className="mt-4 flex w-full justify-between text-[10px]">
+                  <span>Extra bonus</span>
+                  <span className="font-bold">$190.00</span>
+                </div>
+                <div className="mt-1 flex w-full justify-between text-[10px]">
+                  <span>Reels</span>
+                  <span className="font-bold">$4.02</span>
+                </div>
+              </div>
+            ),
+            text: 'Extra bonus se hee 194$ ban gye is month🤗'
+          },
+          { isMe: false, time: '4:13 PM', text: 'Trending videos wale lecture se easily bana paya is page ko' },
+          { isMe: false, time: '4:16 PM', text: 'And I implemented just 10% of what you sir taught in the training' },
+          { isMe: true, time: '4:16 PM', text: 'MashAllah' }
+        ]}
+      />
+      
+      <WhatsAppChat
+        name="Nimra batch 1"
+        avatarInitial="N"
+        messages={[
+          { isMe: true, time: '8:50 AM', text: 'Sir' },
+          {
+            isMe: false,
+            time: '8:50 AM',
+            image: (
+              <div className="flex h-48 w-full flex-col items-center justify-center bg-slate-900 text-white p-3">
+                 <div className="text-[10px] font-semibold w-full text-left mb-2">Overview</div>
+                 <div className="grid grid-cols-2 gap-2 w-full">
+                    <div className="bg-slate-800 rounded p-2 text-left">
+                       <div className="text-[9px] text-slate-400">Views</div>
+                       <div className="font-bold text-sm">2,824,240</div>
+                    </div>
+                    <div className="bg-slate-800 rounded p-2 text-left">
+                       <div className="text-[9px] text-slate-400">Accounts reached</div>
+                       <div className="font-bold text-sm">2,170,610</div>
+                    </div>
+                 </div>
+                 <div className="grid grid-cols-2 gap-2 w-full mt-2">
+                    <div className="bg-slate-800 rounded p-2 text-left">
+                       <div className="text-[9px] text-slate-400">Avg watch time</div>
+                       <div className="font-bold text-sm">11s</div>
+                    </div>
+                    <div className="bg-slate-800 rounded p-2 text-left">
+                       <div className="text-[9px] text-slate-400">Follows</div>
+                       <div className="font-bold text-sm">5,240</div>
+                    </div>
+                 </div>
+              </div>
+            ),
+            text: 'Viral 😍'
+          },
+          { isMe: false, time: '8:50 AM', text: 'Podcast wale lecture amazing thy aur is account pe 12k followers hogye Hain with 4m views in last 28 days💖' },
+          { isMe: false, time: '8:53 AM', text: 'Also working on kids content' }
+        ]}
+      />
+    </div>
+  )
+}
+
+// ── Outcomes Grid ────────────────────────────────────────────────────────
+const OUTCOMES = [
+  { icon: '📸', title: 'AI Product Photography', price: '$300–$800', desc: 'Studio-quality shots for any brand.' },
+  { icon: '🎬', title: 'UGC Talking Ads', price: '$500–$2,000', desc: 'Avatars that sell on Meta & TikTok.' },
+  { icon: '🧠', title: 'AI Influencer Builds', price: '$2,000–$15,000', desc: 'Faceless personas with real income.' },
+  { icon: '🛍️', title: 'E-com Creative Sets', price: '$400–$1,200', desc: 'Full product creative kits per drop.' },
+  { icon: '💬', title: 'Multi-language Ads', price: '$300–$900', desc: 'Urdu, English, Arabic — one render.' },
+  { icon: '🎨', title: 'Brand Style Systems', price: '$600–$1,500', desc: 'Consistent AI aesthetic per brand.' },
+  { icon: '🎙️', title: 'AI Voiceover Reels', price: '$200–$600', desc: 'Hooks + voice + visuals — done.' },
+  { icon: '📈', title: 'Performance Creative', price: '$1,000–$5,000', desc: 'Iterative test creatives for ad spend.' },
+]
+
+function OutcomesGrid() {
+  return (
+    <section className="bg-white px-4 py-16 sm:px-6 sm:py-24">
+      <div className="mx-auto max-w-5xl text-center">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
+          Outcomes
+        </div>
+        <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          By the end of this course, you<br />will be able to:
+        </h2>
+        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {OUTCOMES.map((o, i) => (
+            <div key={i} className="flex flex-col items-start rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+              <div className="text-3xl">{o.icon}</div>
+              <h3 className="mt-4 font-['Sora'] font-bold text-slate-900">{o.title}</h3>
+              <div className="mt-1 text-sm font-bold text-blue-600">{o.price}</div>
+              <p className="mt-2 text-xs leading-relaxed text-slate-500">{o.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Income Potential & Roadmap ─────────────────────────────────────────────
+const INCOMES = [
+  { icon: <MonitorSmartphone className="h-5 w-5 text-white" />, title: 'AI Product Photography', price: '$300 - $800', desc: 'Studio-grade product shots without a studio. Local + e-commerce clients.' },
+  { icon: <Mic className="h-5 w-5 text-white" />, title: 'UGC Talking Ad Videos', price: '$500 - $2,000', desc: 'Realistic AI avatars reading scripts for brand ads on Meta & TikTok.' },
+  { icon: <TrendingUp className="h-5 w-5 text-white" />, title: 'Monthly Brand Retainer', price: '$1,000 - $5,000', desc: 'Recurring content packages — 8 to 30 assets per brand per month.' },
+  { icon: <Star className="h-5 w-5 text-white" />, title: 'Faceless AI Influencer', price: '$2,000 - $15,000', desc: 'Build a viral AI persona. Brand deals, affiliate, sponsorships.' },
+]
+
+function IncomeAndRoadmap() {
+  return (
+    <section className="bg-slate-50 px-4 py-16 sm:px-6 sm:py-24">
+      <div className="mx-auto max-w-5xl">
+        {/* Income Potential */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
+            Income Potential
+          </div>
+          <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            What students earn in 14 days
+          </h2>
+        </div>
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {INCOMES.map((inc, i) => (
+            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-blue-500">
+                {inc.icon}
+              </div>
+              <h3 className="mt-4 font-['Sora'] text-sm font-bold text-slate-900 leading-tight">{inc.title}</h3>
+              <div className="mt-1 text-sm font-bold text-blue-500">{inc.price}</div>
+              <p className="mt-3 text-xs leading-relaxed text-slate-500">{inc.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Roadmap */}
+        <div className="mt-24 text-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
+            14-Day Roadmap
+          </div>
+          <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            From zero to first paycheck
+          </h2>
+        </div>
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { day: 'DAY 1-5', step: '01', title: 'Foundations', desc: 'Master the AI stack — prompts, tools, workflows.' },
+            { day: 'DAY 6-10', step: '02', title: 'First Asset', desc: 'Ship your first paid AI ad. Build your portfolio.' },
+            { day: 'DAY 10-13', step: '03', title: 'First Client', desc: 'Outreach scripts + DMs. Sign your first paying brand.' },
+            { day: 'DAY 14', step: '04', title: 'Scale', desc: 'Retainer + faceless brand. $1K-$5K monthly target.' },
+          ].map((r, i) => (
+            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm relative pt-10">
+              <div className="absolute -top-3 left-6 rounded-full bg-[#1A233A] px-3 py-1 text-[10px] font-bold text-white uppercase tracking-widest">
+                {r.day}
+              </div>
+              <div className="font-['Sora'] text-4xl font-extrabold text-blue-600">{r.step}</div>
+              <h3 className="mt-2 font-['Sora'] text-lg font-bold text-slate-900">{r.title}</h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-500">{r.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ── Bonuses Bar ────────────────────────────────────────────────────────────
+function BonusesBar() {
+  return (
+    <div className="mx-auto mt-12 max-w-4xl overflow-hidden rounded-2xl bg-[#0F172A] p-8 text-white shadow-xl">
+      <div className="text-xs font-bold uppercase tracking-wider text-cyan-400">
+        + BONUSES INCLUDED
+      </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        {[
+          '200+ proven AI prompts pack',
+          'Cost-cutting tool stack hack',
+          'Pakistan payment guide (Payoneer, Wise)',
+          'Free Client Acquisition Ebook',
+          'Private WhatsApp support group'
+        ].map((bonus, i) => (
+          <div key={i} className="flex items-center gap-3 text-sm">
+            <CheckCircle className="h-4 w-4 text-cyan-400 shrink-0" />
+            <span className="text-slate-300">{bonus}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────
 export default function HomePage() {
   const [headerScrolled, setHeaderScrolled] = useState(false)
@@ -296,6 +564,9 @@ export default function HomePage() {
         </div>
       </div>
 
+      <OutcomesGrid />
+      <IncomeAndRoadmap />
+
       {/* ── Community Section ── */}
       <section className="px-4 py-14 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-3xl text-center">
@@ -397,6 +668,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+          <BonusesBar />
         </div>
       </section>
 
@@ -423,6 +695,11 @@ export default function HomePage() {
                 <p className="mt-2 text-sm leading-relaxed text-slate-500">{story.desc}</p>
               </div>
             ))}
+          </div>
+
+          <div className="mt-16 text-center">
+            <h3 className="font-['Sora'] text-2xl font-bold text-slate-900 mb-8">What students are sharing in our WhatsApp Community</h3>
+            <WhatsAppTestimonials />
           </div>
         </div>
       </section>
