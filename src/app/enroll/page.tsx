@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -445,6 +445,12 @@ function compressImageToBase64(file: File, maxWidth = 1200, quality = 0.7): Prom
 export default function EnrollPage() {
   const [step, setStep]   = useState(1)
   const [leadId, setLeadId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'InitiateCheckout')
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-slate-800">
