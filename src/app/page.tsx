@@ -618,9 +618,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      <OutcomesGrid />
-      <IncomeAndRoadmap />
-
       {/* ── Community Section ── */}
       <section className="px-4 py-14 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-3xl text-center">
@@ -827,6 +824,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      <OutcomesGrid />
+      <IncomeAndRoadmap />
+
       {/* ── FAQ ── */}
       <section className="bg-slate-50 px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-3xl">
@@ -840,7 +840,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Skool Testimonials ── */}
-      <SkoolTestimonials />
+      {/* <SkoolTestimonials /> */}
 
       {/* ── Final CTA ── */}
       <section className="gradient-brand px-4 py-16 text-white sm:px-6 sm:py-24">
