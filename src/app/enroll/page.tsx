@@ -176,7 +176,7 @@ function Step2({ onContinue, onBack }: { onContinue: () => void; onBack: () => v
       </h2>
       <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
         <Lock className="h-3.5 w-3.5 text-blue-600" />
-        Send <strong className="text-slate-800 mx-1">exactly Rs. {COURSE_PRICE.toLocaleString()}</strong> (or nearest round figure) to the account below.
+        Send <strong className="text-slate-800 mx-1">exactly Rs. {COURSE_PRICE.toLocaleString()}</strong> to any account below.
       </p>
 
       {/* Payment Options */}
@@ -186,9 +186,7 @@ function Step2({ onContinue, onBack }: { onContinue: () => void; onBack: () => v
         {HBL_ACCOUNT && <BankRow bank="HBL (Bank Transfer)" title={ACCOUNT_TITLE} num={HBL_ACCOUNT} colorClass="text-teal-700" />}
       </div>
 
-      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs text-amber-700">
-        <span className="font-semibold">Note:</span> Sending Rs. 2,950 or Rs. 3,000 is also fine — we verify the recipient account, not the exact amount.
-      </div>
+
 
       <button onClick={onContinue}
         className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.02]"
