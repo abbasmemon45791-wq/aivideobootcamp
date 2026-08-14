@@ -9,8 +9,8 @@ import {
 } from 'lucide-react'
 
 // ── Config ────────────────────────────────────────────────────────────────
-const ENROLLED = 726
-const TOTAL_SLOTS = 800
+const ENROLLED = 1127
+const TOTAL_SLOTS = 1200
 const PRICE = 2900
 const ORIGINAL_PRICE = 7999
 const DISCOUNT = Math.round((1 - PRICE / ORIGINAL_PRICE) * 100)
@@ -297,15 +297,13 @@ export default function HomePage() {
       <section className="px-4 py-14 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="font-['Sora'] text-2xl font-bold text-slate-900 sm:text-3xl md:text-4xl">
-            Join <span className="text-gradient">{ENROLLED} Creators</span> Earning Online
+            Inside the <span className="text-gradient">AI Bootcamp PK</span> Skool Community
           </h2>
           <p className="mt-2 text-sm text-slate-500 sm:text-base">
-            Real students. Real income. Active support community to help you land clients.
+            Join over 1.1k members. Unlock courses, climb the leaderboards to win prizes, and network with Pakistan's top AI creators.
           </p>
           <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-glow sm:rounded-3xl">
-            <div className="flex items-center justify-center py-20 text-slate-400 text-sm">
-              [Community screenshot placeholder]
-            </div>
+            <img src="/community.png" alt="AI Bootcamp PK Skool Community" className="w-full h-auto object-cover" />
           </div>
           <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/enroll" className="gradient-brand inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold text-white shadow-glow transition-transform hover:scale-[1.02] sm:w-auto">
