@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Flame, Sparkles, CheckCircle, ArrowRight, ArrowDown,
   ChevronDown, Shield, Clock, Users, Star, Zap, Play,
@@ -304,8 +305,8 @@ export default function HomePage() {
           <p className="mt-2 text-sm text-slate-500 sm:text-base">
             Join over 1.1k members. Unlock courses, climb the leaderboards to win prizes, and network with Pakistan's top AI creators.
           </p>
-          <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-glow sm:rounded-3xl">
-            <img src="/community.png" alt="AI Bootcamp PK Skool Community" className="w-full h-auto object-cover" />
+          <div className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <Image src="/community.png" alt="AI Bootcamp PK Skool Community" width={1200} height={800} className="w-full h-auto object-cover" />
           </div>
           <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/enroll" className="gradient-brand inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold text-white shadow-glow transition-transform hover:scale-[1.02] sm:w-auto">
