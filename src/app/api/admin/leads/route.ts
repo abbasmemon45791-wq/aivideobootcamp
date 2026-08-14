@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { Resend } from 'resend'
-
-const getResend = () => new Resend(process.env.RESEND_API_KEY ?? 'placeholder')
 
 // ── Admin auth middleware ──────────────────────────────────────────────────
 function getAdminToken(req: NextRequest) {
@@ -90,39 +87,7 @@ export async function POST(req: NextRequest) {
       .eq('id', paymentId)
   }
 
-  // If approved → send access email
-  if (action === 'approve') {
-    const { data: lead } = await supabaseAdmin
-      .from('leads')
-      .select('name, email, whatsapp')
-      .eq('id', leadId)
-      .single()
 
-    if (lead?.email && process.env.RESEND_API_KEY) {
-      await getResend().emails.send({
-        from: `${process.env.COURSE_NAME ?? 'AI Bootcamp'} <${process.env.FROM_EMAIL ?? 'no-reply@yourdomain.com'}>`,
-        to: lead.email,
-        subject: `🎉 Your Access is Ready — ${process.env.COURSE_NAME ?? 'AI Bootcamp'}`,
-        html: `
-          <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px;">
-            <h1 style="color: #1e293b;">Welcome aboard, ${lead.name}! 🚀</h1>
-            <p style="color: #64748b; font-size: 16px; line-height: 1.6;">
-              Your payment has been verified. Here's your access link:
-            </p>
-            <a href="${process.env.COURSE_ACCESS_LINK ?? '#'}" 
-               style="display: inline-block; background: linear-gradient(135deg, #2563eb, #06b6d4);
-                      color: white; padding: 16px 32px; border-radius: 50px; 
-                      text-decoration: none; font-weight: 600; font-size: 16px; margin: 24px 0;">
-              Access Your Course →
-            </a>
-            <p style="color: #64748b; font-size: 14px;">
-              Need help? WhatsApp: <strong>${process.env.WHATSAPP_SUPPORT ?? '+92 XXX XXXXXXX'}</strong>
-            </p>
-          </div>
-        `,
-      }).catch(console.error)
-    }
-  }
 
   return NextResponse.json({ success: true, status: newLeadStatus })
 }

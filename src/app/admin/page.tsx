@@ -160,6 +160,12 @@ function LeadRow({ lead, token, onUpdate }: { lead: Lead; token: string; onUpdat
               </button>
             </>
           )}
+          {lead.status === 'approved' && (
+            <a href={`https://wa.me/${lead.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${lead.name},\n\nYour payment for the AI Bootcamp has been verified! 🎉\n\nHere is your course access link:\nhttps://your-lms-link.com\n\nHappy learning!`)}`} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-200">
+              <ExternalLink className="h-3.5 w-3.5" /> Send Access
+            </a>
+          )}
           <button onClick={() => setExpanded(!expanded)}
             className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100">
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
