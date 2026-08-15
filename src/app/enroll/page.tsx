@@ -75,7 +75,10 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
       if (typeof window !== 'undefined' && (window as any).fbq) {
         (window as any).fbq('track', 'Lead');
       }
-      sendGAEvent({ event: 'generate_lead', value: 0 });
+      sendGAEvent({ 
+        event: 'conversion', 
+        send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_LEAD_LABEL}`
+      });
 
       onDone(data.id, { name: name.trim(), email: email.trim() })
     } catch (e: unknown) {
@@ -279,7 +282,12 @@ function Step3({ leadId, onBack }: { leadId: string; onBack: () => void }) {
       if (typeof window !== 'undefined' && (window as any).fbq) {
         (window as any).fbq('track', 'Purchase', { value: COURSE_PRICE, currency: 'PKR' });
       }
-      sendGAEvent({ event: 'purchase', value: COURSE_PRICE, currency: 'PKR' });
+      sendGAEvent({ 
+        event: 'conversion', 
+        send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL}`,
+        value: COURSE_PRICE, 
+        currency: 'PKR' 
+      });
 
       setDone(true)
     } catch (e: unknown) {
