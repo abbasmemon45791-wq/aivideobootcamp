@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image' },
 }
 
+import { GoogleAnalytics } from '@next/third-parties/google'
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${sora.variable} ${jakarta.variable}`}>
@@ -39,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           `}
         </Script>
         {children}
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID as string || ''} />
       </body>
     </html>
   )

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@next/third-parties": "^15.0.0-canary.169",
     "@supabase/supabase-js": "^2.112.3",
     "lucide-react": "^1.31.0",
     "next": "16.3.1",
