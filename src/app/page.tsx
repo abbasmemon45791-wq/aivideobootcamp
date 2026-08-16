@@ -306,7 +306,7 @@ const OUTCOMES = [
 
 function OutcomesGrid() {
   return (
-    <section className="bg-white px-4 py-16 sm:px-6 sm:py-24">
+    <section className="bg-white px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-5xl text-center">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
           Outcomes
@@ -339,7 +339,7 @@ const INCOMES = [
 
 function IncomeAndRoadmap() {
   return (
-    <section className="bg-slate-50 px-4 py-16 sm:px-6 sm:py-24">
+    <section className="bg-slate-50 px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-5xl">
         {/* Income Potential */}
         <div className="text-center">
@@ -433,7 +433,7 @@ const SKOOL_TESTIMONIALS = [
 
 function SkoolTestimonials() {
   return (
-    <section className="bg-[#fafafa] px-4 py-16 sm:px-6 sm:py-24">
+    <section className="bg-[#fafafa] px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/80 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600 mb-4">
@@ -485,7 +485,7 @@ const AUDIENCES = [
 
 function WhoIsThisFor() {
   return (
-    <section className="bg-white px-4 py-16 sm:px-6 sm:py-24">
+    <section className="bg-white px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-5xl">
         <div className="text-center">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
@@ -520,6 +520,22 @@ export default function HomePage() {
     if (typeof window !== 'undefined' && (window as any).fbq) {
       (window as any).fbq('track', 'ViewContent')
     }
+
+    // Capture source from URL or Referrer and save to localStorage
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const utm = params.get('utm_source') || params.get('ref')
+      if (utm) {
+        localStorage.setItem('lead_source', utm.toLowerCase())
+      } else if (!localStorage.getItem('lead_source') && document.referrer) {
+        const ref = document.referrer.toLowerCase()
+        if (ref.includes('facebook') || ref.includes('fb.com') || ref.includes('instagram')) localStorage.setItem('lead_source', 'facebook')
+        else if (ref.includes('google')) localStorage.setItem('lead_source', 'google')
+        else if (ref.includes('tiktok')) localStorage.setItem('lead_source', 'tiktok')
+        else if (ref.includes('youtube')) localStorage.setItem('lead_source', 'youtube')
+      }
+    }
+
     const onScroll = () => setHeaderScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -681,7 +697,7 @@ export default function HomePage() {
       </div>
 
       {/* ── Enrollment Pricing Card ── */}
-      <section ref={enrollRef} id="enroll" className="px-4 py-16 sm:px-6 sm:py-24">
+      <section ref={enrollRef} id="enroll" className="px-4 py-10 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-3xl">
           <div className="relative overflow-hidden rounded-3xl border border-blue-200/60 bg-white p-8 shadow-glow sm:p-12">
             <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-600/10 blur-3xl" />
@@ -754,7 +770,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Success Stories ── */}
-      <section className="px-4 py-16 sm:px-6 sm:py-20">
+      <section className="px-4 py-10 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-5xl">
           <div className="mx-auto max-w-3xl text-center">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
@@ -786,7 +802,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Modules ── */}
-      <section id="modules" className="bg-slate-50 px-4 py-16 sm:px-6 sm:py-24">
+      <section id="modules" className="bg-slate-50 px-4 py-10 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-4xl">
           <div className="mx-auto max-w-3xl text-center">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
@@ -821,7 +837,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Reviews ── */}
-      <section id="reviews" className="px-4 py-16 sm:px-6 sm:py-24">
+      <section id="reviews" className="px-4 py-10 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-5xl">
           <div className="mx-auto max-w-3xl text-center">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
@@ -860,7 +876,7 @@ export default function HomePage() {
       <WhoIsThisFor />
 
       {/* ── FAQ ── */}
-      <section className="bg-slate-50 px-4 py-16 sm:px-6 sm:py-24">
+      <section className="bg-slate-50 px-4 py-10 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-3xl">
           <div className="text-center">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600 mb-4">
@@ -878,7 +894,7 @@ export default function HomePage() {
       {/* <SkoolTestimonials /> */}
 
       {/* ── Final CTA ── */}
-      <section className="bg-[#0F172A] px-4 py-16 text-white sm:px-6 sm:py-24">
+      <section className="bg-[#0F172A] px-4 py-10 text-white sm:px-6 sm:py-16">
         <div className="mx-auto max-w-4xl text-center">
           <Clock className="mx-auto h-8 w-8 mb-6 text-cyan-400" />
           <h2 className="font-['Sora'] text-3xl font-bold leading-tight sm:text-5xl">
@@ -893,7 +909,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-16 sm:px-6 sm:py-24">
+      <section className="bg-white px-4 py-10 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-3xl text-center">
           <Zap className="mx-auto h-8 w-8 mb-4 text-blue-600" />
           <h2 className="font-['Sora'] text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl">

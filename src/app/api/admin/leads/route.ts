@@ -27,6 +27,9 @@ export async function GET(req: NextRequest) {
 
   const url = new URL(req.url)
   const status = url.searchParams.get('status')
+  const search = url.searchParams.get('search')
+  const startDate = url.searchParams.get('startDate')
+  const endDate = url.searchParams.get('endDate')
   const page = parseInt(url.searchParams.get('page') ?? '1')
   const limit = 50
   const offset = (page - 1) * limit
@@ -45,6 +48,21 @@ export async function GET(req: NextRequest) {
     .range(offset, offset + limit - 1)
 
   if (status) query = query.eq('status', status)
+  
+  if (search) {
+    query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,whatsapp.ilike.%${search}%`)
+  }
+
+  if (startDate) {
+    query = query.gte('created_at', startDate)
+  }
+
+  if (endDate) {
+    // Add 1 day to include the whole end date
+    const end = new Date(endDate)
+    end.setDate(end.getDate() + 1)
+    query = query.lt('created_at', end.toISOString())
+  }
 
   const { data, error, count } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

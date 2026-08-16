@@ -7,7 +7,7 @@ const hashData = (data: string) => crypto.createHash('sha256').update(data).dige
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, whatsapp } = body
+    const { name, email, whatsapp, source, utm_medium, utm_campaign, utm_content } = body
 
     // Validation
     if (!name || name.trim().length < 2 || name.length > 100)
@@ -29,9 +29,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ id: existing.id, existing: true })
     }
 
-    // Get IP for basic rate limiting / fraud tracking
+    // Get IP and User-Agent for basic rate limiting / fraud tracking / attribution
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? 
                 req.headers.get('x-real-ip') ?? 'unknown'
+    const userAgent = req.headers.get('user-agent') ?? 'unknown'
 
     const { data, error } = await supabaseAdmin
       .from('leads')
@@ -40,7 +41,12 @@ export async function POST(req: NextRequest) {
         email: email.toLowerCase().trim(),
         whatsapp: whatsapp.trim(),
         ip_address: ip,
+        user_agent: userAgent,
         status: 'pending',
+        source: source || 'direct',
+        utm_medium: utm_medium?.trim() || null,
+        utm_campaign: utm_campaign?.trim() || null,
+        utm_content: utm_content?.trim() || null,
       })
       .select('id')
       .single()

@@ -28,6 +28,7 @@ interface Lead {
   email: string
   whatsapp: string
   city?: string
+  source?: string
   status: string
   created_at: string
   payments?: Payment[]
@@ -107,6 +108,13 @@ function LeadRow({ lead, token, onUpdate }: { lead: Lead; token: string; onUpdat
     } finally { setLoading(null) }
   }
 
+  // Source badge color logic
+  const sourceColor = lead.source === 'facebook' || lead.source === 'instagram' ? 'bg-blue-100 text-blue-700' :
+                      lead.source === 'google' ? 'bg-red-100 text-red-700' :
+                      lead.source === 'tiktok' ? 'bg-slate-900 text-white' :
+                      lead.source === 'youtube' ? 'bg-red-100 text-red-600' :
+                      'bg-slate-100 text-slate-600'
+
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
       {/* Main row */}
@@ -122,7 +130,11 @@ function LeadRow({ lead, token, onUpdate }: { lead: Lead; token: string; onUpdat
             <span>{lead.email}</span>
             <a href={`https://wa.me/${lead.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
               className="text-emerald-600 hover:underline">{lead.whatsapp}</a>
-            {lead.city && <span>{lead.city}</span>}
+            {lead.source && (
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${sourceColor}`}>
+                {lead.source}
+              </span>
+            )}
             <span>{new Date(lead.created_at).toLocaleDateString('en-PK')}</span>
           </div>
           {payment && (
@@ -176,15 +188,26 @@ function LeadRow({ lead, token, onUpdate }: { lead: Lead; token: string; onUpdat
       {/* Expanded detail */}
       {expanded && (
         <div className="border-t border-slate-100 bg-slate-50/80 px-4 pb-4 pt-3">
-          <div className="grid gap-3 text-xs sm:grid-cols-2">
+          <div className="grid gap-3 text-xs sm:grid-cols-3">
             <div>
               <div className="font-semibold text-slate-500 uppercase tracking-wider text-[10px] mb-1">Lead Info</div>
               <div className="space-y-0.5 text-slate-700">
                 <div><span className="text-slate-400">ID:</span> <span className="font-mono">{lead.id}</span></div>
                 <div><span className="text-slate-400">Email:</span> {lead.email}</div>
-                <div><span className="text-slate-400">City:</span> {lead.city ?? '—'}</div>
               </div>
             </div>
+            
+            {/* Tracking Info */}
+            <div>
+              <div className="font-semibold text-slate-500 uppercase tracking-wider text-[10px] mb-1">Tracking</div>
+              <div className="space-y-0.5 text-slate-700">
+                <div><span className="text-slate-400">Source:</span> {lead.source ?? 'direct'}</div>
+                <div><span className="text-slate-400">Medium:</span> {(lead as any).utm_medium ?? '—'}</div>
+                <div><span className="text-slate-400">Campaign:</span> {(lead as any).utm_campaign ?? '—'}</div>
+                <div><span className="text-slate-400">Content:</span> {(lead as any).utm_content ?? '—'}</div>
+              </div>
+            </div>
+
             {payment && (
               <div>
                 <div className="font-semibold text-slate-500 uppercase tracking-wider text-[10px] mb-1">Payment Info</div>
@@ -221,31 +244,54 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   const [total, setTotal]   = useState(0)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
+  const [search, setSearch] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
   const [page, setPage]     = useState(1)
 
   const load = useCallback(async () => {
     setLoading(true)
     const params = new URLSearchParams({ page: String(page) })
     if (filter) params.set('status', filter)
+    if (search) params.set('search', search)
+    if (startDate) params.set('startDate', startDate)
+    if (endDate) params.set('endDate', endDate)
+
     const res = await fetch(`/api/admin/leads?${params}`, { headers: { 'x-admin-token': token } })
     if (res.status === 401) { onLogout(); return }
     const data = await res.json()
     setLeads(data.leads ?? [])
     setTotal(data.total ?? 0)
     setLoading(false)
-  }, [token, filter, page, onLogout])
+  }, [token, filter, search, startDate, endDate, page, onLogout])
 
   useEffect(() => { load() }, [load])
+
+  // Handle Search Submit
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setPage(1)
+    load()
+  }
 
   // Stats
   const submitted  = leads.filter(l => l.status === 'payment_submitted').length
   const approved   = leads.filter(l => l.status === 'approved').length
+  const rejected   = leads.filter(l => l.status === 'rejected').length
+
+  // Source breakdown
+  const sources = leads.reduce((acc, lead) => {
+    const s = lead.source || 'direct'
+    acc[s] = (acc[s] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
 
   const exportCSV = () => {
     const rows = [
-      ['Name', 'Email', 'WhatsApp', 'City', 'Status', 'Amount', 'TX ID', 'Enrolled'],
+      ['Name', 'Email', 'WhatsApp', 'Source', 'Medium', 'Campaign', 'Content', 'Status', 'Amount', 'TX ID', 'Enrolled'],
       ...leads.map(l => [
-        l.name, l.email, l.whatsapp, l.city ?? '',
+        l.name, l.email, l.whatsapp, l.source ?? 'direct',
+        (l as any).utm_medium ?? '', (l as any).utm_campaign ?? '', (l as any).utm_content ?? '',
         l.status, l.payments?.[0]?.amount ?? '', l.payments?.[0]?.transaction_id ?? '',
         new Date(l.created_at).toLocaleDateString('en-PK'),
       ]),
@@ -287,11 +333,12 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           {[
             { label: 'Total Leads', val: total, icon: <Users className="h-5 w-5 text-blue-600" />, bg: 'bg-blue-50' },
             { label: 'Pending Review', val: submitted, icon: <Clock className="h-5 w-5 text-amber-600" />, bg: 'bg-amber-50' },
             { label: 'Approved', val: approved, icon: <CheckCircle className="h-5 w-5 text-emerald-600" />, bg: 'bg-emerald-50' },
+            { label: 'Rejected', val: rejected, icon: <XCircle className="h-5 w-5 text-red-600" />, bg: 'bg-red-50' },
             { label: 'Revenue (est.)', val: `Rs. ${(approved * 2900).toLocaleString()}`, icon: <TrendingUp className="h-5 w-5 text-purple-600" />, bg: 'bg-purple-50' },
           ].map((s, i) => (
             <div key={i} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -304,17 +351,39 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           ))}
         </div>
 
-        {/* Filter */}
-        <div className="mt-5 flex flex-wrap items-center gap-2">
-          {['', 'pending', 'payment_submitted', 'approved', 'rejected'].map(f => (
-            <button key={f} onClick={() => { setFilter(f); setPage(1) }}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${filter === f ? 'text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
-              style={filter === f ? { background: 'linear-gradient(135deg,#2563eb,#06b6d4)' } : {}}>
-              {f === '' ? 'All' : STATUS_LABEL[f]?.label ?? f}
-            </button>
-          ))}
-          <span className="ml-auto text-xs text-slate-400">{total} total</span>
+        {/* Source Breakdown */}
+        {Object.keys(sources).length > 0 && (
+           <div className="mt-3 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm text-xs">
+             <span className="font-semibold text-slate-500 mr-2">Top Sources (this page):</span>
+             {Object.entries(sources).sort((a,b) => b[1] - a[1]).map(([src, count]) => (
+               <span key={src} className="capitalize bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">
+                 {src}: {count}
+               </span>
+             ))}
+           </div>
+        )}
+
+        {/* Filters and Search */}
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            {['', 'pending', 'payment_submitted', 'approved', 'rejected'].map(f => (
+              <button key={f} onClick={() => { setFilter(f); setPage(1) }}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${filter === f ? 'text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+                style={filter === f ? { background: 'linear-gradient(135deg,#2563eb,#06b6d4)' } : {}}>
+                {f === '' ? 'All' : STATUS_LABEL[f]?.label ?? f}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSearch} className="flex flex-wrap gap-2">
+             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-blue-500" />
+             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-blue-500" />
+             <input type="text" placeholder="Search name, email, phone..." value={search} onChange={e => setSearch(e.target.value)} className="w-48 rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-blue-500" />
+             <button type="submit" className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700">Search</button>
+          </form>
         </div>
+        
+        <div className="mt-2 text-right text-xs text-slate-400">{total} total records found</div>
 
         {/* Lead list */}
         <div className="mt-4 space-y-2">

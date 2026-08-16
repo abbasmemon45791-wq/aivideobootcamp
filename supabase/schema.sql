@@ -6,12 +6,29 @@ CREATE TABLE IF NOT EXISTS leads (
   name VARCHAR(100) NOT NULL,
   email VARCHAR(255) NOT NULL,
   whatsapp VARCHAR(20) NOT NULL,
-  city VARCHAR(100),
   ip_address VARCHAR(50),
   status VARCHAR(20) DEFAULT 'pending',
   -- status values: pending | payment_submitted | approved | rejected
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  -- Tracking columns
+  source VARCHAR(50) DEFAULT 'direct',
+  utm_medium VARCHAR(100),
+  utm_campaign VARCHAR(100),
+  utm_content VARCHAR(255),
+  user_agent TEXT
 );
+
+-- ==========================================
+-- RUN THIS MIGRATION IF TABLE ALREADY EXISTS:
+-- ==========================================
+-- ALTER TABLE leads 
+--   ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'direct',
+--   ADD COLUMN IF NOT EXISTS utm_medium VARCHAR(100),
+--   ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100),
+--   ADD COLUMN IF NOT EXISTS utm_content VARCHAR(255),
+--   ADD COLUMN IF NOT EXISTS user_agent TEXT;
+-- ==========================================
 
 -- PAYMENTS table: Step 3 screenshot submission
 CREATE TABLE IF NOT EXISTS payments (

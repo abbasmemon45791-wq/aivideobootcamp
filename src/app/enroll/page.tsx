@@ -64,10 +64,36 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
 
     setLoading(true)
     try {
+      const params = new URLSearchParams(window.location.search)
+      let source = params.get('utm_source') || params.get('ref') || localStorage.getItem('lead_source')
+      
+      if (!source && document.referrer) {
+        const ref = document.referrer.toLowerCase()
+        if (ref.includes('facebook') || ref.includes('fb.com') || ref.includes('instagram')) source = 'facebook'
+        else if (ref.includes('google')) source = 'google'
+        else if (ref.includes('tiktok')) source = 'tiktok'
+        else if (ref.includes('youtube')) source = 'youtube'
+      }
+      
+      source = source || 'direct'
+
+      // Capture full UTM params for campaign attribution
+      const utm_medium = params.get('utm_medium') || localStorage.getItem('lead_utm_medium') || undefined
+      const utm_campaign = params.get('utm_campaign') || localStorage.getItem('lead_utm_campaign') || undefined
+      const utm_content = params.get('utm_content') || localStorage.getItem('lead_utm_content') || undefined
+
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), whatsapp: wa.trim() }),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          whatsapp: wa.trim(),
+          source,
+          utm_medium,
+          utm_campaign,
+          utm_content,
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -439,8 +465,29 @@ export default function EnrollPage() {
   const [leadId, setLeadId] = useState<string | null>(null)
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).fbq) {
-      (window as any).fbq('track', 'InitiateCheckout')
+    if (typeof window !== 'undefined') {
+      if ((window as any).fbq) {
+        (window as any).fbq('track', 'InitiateCheckout')
+      }
+      // Also capture source on direct enroll page visits
+      const params = new URLSearchParams(window.location.search)
+      const utm = params.get('utm_source') || params.get('ref')
+      if (utm) {
+        localStorage.setItem('lead_source', utm.toLowerCase())
+      } else if (!localStorage.getItem('lead_source') && document.referrer) {
+        const ref = document.referrer.toLowerCase()
+        if (ref.includes('facebook') || ref.includes('fb.com') || ref.includes('instagram')) localStorage.setItem('lead_source', 'facebook')
+        else if (ref.includes('google')) localStorage.setItem('lead_source', 'google')
+      }
+      
+      const utmMedium = params.get('utm_medium')
+      if (utmMedium) localStorage.setItem('lead_utm_medium', utmMedium)
+      
+      const utmCampaign = params.get('utm_campaign')
+      if (utmCampaign) localStorage.setItem('lead_utm_campaign', utmCampaign)
+        
+      const utmContent = params.get('utm_content')
+      if (utmContent) localStorage.setItem('lead_utm_content', utmContent)
     }
   }, [])
 

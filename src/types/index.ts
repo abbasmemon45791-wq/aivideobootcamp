@@ -3,7 +3,11 @@ export interface Lead {
   name: string
   email: string
   whatsapp: string
-  city?: string
+  source?: string
+  utm_medium?: string
+  utm_campaign?: string
+  utm_content?: string
+  user_agent?: string
   ip_address?: string
   status: 'pending' | 'payment_submitted' | 'approved' | 'rejected'
   created_at: string
@@ -49,5 +53,8 @@ export interface EnrollFormData {
   name: string
   email: string
   whatsapp: string
-  city?: string
+  source?: string
+  utm_medium?: string
+  utm_campaign?: string
+  utm_content?: string
 }
