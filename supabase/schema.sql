@@ -16,7 +16,11 @@ CREATE TABLE IF NOT EXISTS leads (
   utm_medium VARCHAR(100),
   utm_campaign VARCHAR(100),
   utm_content VARCHAR(255),
-  user_agent TEXT
+  user_agent TEXT,
+  
+  -- Access Tracking
+  access_sent BOOLEAN DEFAULT FALSE,
+  access_sent_at TIMESTAMPTZ
 );
 
 -- ==========================================

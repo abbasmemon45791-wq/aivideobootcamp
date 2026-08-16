@@ -11,6 +11,8 @@ export interface Lead {
   ip_address?: string
   status: 'pending' | 'payment_submitted' | 'approved' | 'rejected'
   created_at: string
+  access_sent?: boolean
+  access_sent_at?: string
 }
 
 export interface Payment {
