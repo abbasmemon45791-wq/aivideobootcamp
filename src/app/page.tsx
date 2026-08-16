@@ -753,10 +753,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="mt-16 text-center">
-            <h3 className="font-['Sora'] text-2xl font-bold text-slate-900 mb-8">What students are sharing in our WhatsApp Community</h3>
-            <WhatsAppTestimonials />
-          </div>
         </div>
       </section>
 
