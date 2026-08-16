@@ -27,6 +27,14 @@ const parseUA = (ua?: string) => {
   return { os, browser, icon }
 }
 
+const formatWhatsAppNumber = (num: string) => {
+  let cleaned = num.replace(/\D/g, '')
+  if (cleaned.startsWith('0')) {
+    cleaned = '92' + cleaned.substring(1)
+  }
+  return cleaned
+}
+
 interface Payment {
   id: string
   screenshot_url?: string
@@ -155,7 +163,8 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
     if (!lead.access_sent) {
       markAccessSent()
     }
-    window.open(`https://wa.me/${lead.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${lead.name},\n\nYour payment for the AI Bootcamp has been verified! 🎉\n\nHere is your course access link:\nhttps://your-lms-link.com\n\nHappy learning!`)}`, '_blank')
+    const formattedWa = formatWhatsAppNumber(lead.whatsapp)
+    window.open(`https://wa.me/${formattedWa}?text=${encodeURIComponent(`Hi ${lead.name},\n\nYour payment for the AI Bootcamp has been verified! 🎉\n\nHere is your course access link:\nhttps://your-lms-link.com\n\nHappy learning!`)}`, '_blank')
   }
 
   const uaInfo = parseUA(lead.user_agent)
@@ -174,9 +183,9 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
               {badge.icon} {badge.label}
             </span>
           </div>
-          <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500">
-            <span>{lead.email}</span>
-            <a href={`https://wa.me/${lead.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+          <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-slate-500">
+            <span className="truncate max-w-[120px] sm:max-w-none">{lead.email}</span>
+            <a href={`https://wa.me/${formatWhatsAppNumber(lead.whatsapp)}`} target="_blank" rel="noopener noreferrer"
               className="text-emerald-600 hover:underline">{lead.whatsapp}</a>
             {lead.source && (
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${sourceColor}`}>
@@ -198,8 +207,9 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
             </div>
           )}
         </div>
+        </div>
 
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 mt-2 sm:mt-0">
           {payment?.screenshot_url && (
             <a href={payment.screenshot_url} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100">
@@ -231,7 +241,6 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
           </button>
         </div>
-      </div>
       </div>
 
       {/* Expanded detail */}
