@@ -175,8 +175,6 @@ function WhatsAppChat({ name, avatarInitial, messages }: { name: string, avatarI
     </div>
   )
 }
-import { Mic } from 'lucide-react';
-
 function WhatsAppTestimonials() {
   return (
     <div className="flex flex-col gap-8 sm:flex-row sm:justify-center">

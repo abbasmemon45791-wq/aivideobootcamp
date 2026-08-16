@@ -497,8 +497,6 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           ))}
         </div>
 
-        </div>
-
         {/* Funnel */}
         <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Conversion Funnel (All Time / Filtered)</div>
