@@ -7,7 +7,7 @@ import {
   ChevronDown, Shield, Clock, Users, Star, Zap, Play,
   TrendingUp, Lock, Infinity, RefreshCw, MonitorSmartphone,
   HeadphonesIcon, CalendarDays, Wallet, CirclePlay, X,
-  Briefcase, DollarSign, GraduationCap, Rocket
+  Briefcase, DollarSign, GraduationCap, Rocket, Mic
 } from 'lucide-react'
 
 // ── Config ────────────────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ const MODULES = [
   { num: '03', title: 'Prompt Engineering — Asli Game Yahan Hai', desc: 'The exact prompt structures that get professional-quality outputs every single time.' },
   { num: '04', title: 'AI Image Generation — Yahan Se Maza Shuru Hota Hai', desc: 'Midjourney, Flux, Ideogram — create stunning visuals for ads and social pages without a designer.' },
   { num: '05', title: 'AI Voice & Audio — Bina Mic Ke Studio Quality', desc: 'ElevenLabs, Suno, and free alternatives to produce broadcast-quality voiceovers and music.' },
-  { num: '06', title: 'AI Video Generation — Lights, Camera, No Crew Needed', desc: 'Kling, Runway, Pika — create cinematic video from text. The skill brands pay $500–$5,000 per project for.' },
+  { num: '06', title: 'AI Video Generation — Lights, Camera, No Crew Needed', desc: 'Kling, Runway, Pika — create cinematic video from text. One of the highest-demand creative skills today.' },
   { num: '07', title: 'Editing & Final Ad Assembly — Jahan Raw Becomes Ready', desc: 'CapCut Pro workflows, subtitle automation, color grading, and the exact export settings for every platform.' },
   { num: '08', title: 'AI Influencer & Faceless Content — Bina Chehra Dikhaye Famous Ho Jao', desc: 'Build a faceless brand, grow to monetization, and run pages that earn while you sleep.' },
   { num: '09', title: 'Clients Lao, Paise Kamao — Skill Ko Business Banao', desc: 'Cold outreach scripts, pricing, contracts, and how to close your first client in under 14 days.' },
@@ -34,18 +34,18 @@ const MODULES = [
 ]
 
 const REVIEWS = [
-  { name: 'Ali Hassan', city: 'Lahore', tag: 'Client Work', text: 'Pehla paid AI ad order close kiya! Sirf 9 din training ke baad. Rs. 15,000 mila pehla project.' },
-  { name: 'Fatima Raza', city: 'Karachi', tag: 'Earnings', text: '$194 Facebook bonus mila sirf AI content se. Yeh course alag hi level ka hai.' },
+  { name: 'Ali Hassan', city: 'Lahore', tag: 'Client Work', text: 'Pehla AI ad order close kiya! Sirf 9 din training ke baad. Course ne sab seekha diya.' },
+  { name: 'Fatima Raza', city: 'Karachi', tag: 'Content Creator', text: 'Facebook bonus program se earnings aane lagi sirf AI content se. Yeh course alag hi level ka hai.' },
   { name: 'Usman Malik', city: 'Islamabad', tag: 'Views', text: '2.8 million views ek video pe! AI podcast content ka koi jawab nahi.' },
-  { name: 'Ayesha Khan', city: 'Rawalpindi', tag: 'Freelancing', text: 'Upwork pe pehla $300 project close kiya. Module 9 ne game change kar diya.' },
-  { name: 'Hassan Javed', city: 'Faisalabad', tag: 'Faceless Page', text: 'Facebook page 0 se 50k followers tak 6 hafton mein. Ads bhi chal rahi hain.' },
+  { name: 'Ayesha Khan', city: 'Rawalpindi', tag: 'Freelancing', text: 'Upwork pe pehla project close kiya. Module 9 ne game change kar diya.' },
+  { name: 'Hassan Javed', city: 'Faisalabad', tag: 'Faceless Page', text: 'Facebook page 0 se 50k followers tak 6 hafton mein. Organic growth ka kamaal.' },
   { name: 'Zainab Noor', city: 'Multan', tag: 'Skill', text: 'Prompt engineering wala module alone worth tha pure course ka price.' },
 ]
 
 const FAQS = [
   { q: 'How will I receive the course?', a: 'After payment verification, you\'ll receive an invite link to our Learning Management System (LMS) via email and WhatsApp. All videos are hosted there — watch on any device, anytime.' },
   { q: 'Is this for complete beginners?', a: 'Yes. If you have a smartphone and basic internet, you can do this. We start from zero — no prior design, video, or tech experience needed.' },
-  { q: 'How long will it take to earn?', a: 'Most students land their first client or make their first income within 14–30 days of completing the course. Module 9 is specifically about getting paid fast.' },
+  { q: 'How soon can I start using these skills?', a: 'Most students start building their portfolio and reaching out to potential clients within 14–30 days of completing the course. Module 9 is specifically about client acquisition strategies.' },
   { q: 'Can I use free tools throughout?', a: 'Yes. We teach premium tools but also include a Bonus module on accessing paid AI tools for free — legally. Many students never pay for tools.' },
   { q: 'What\'s the refund policy?', a: 'If after watching the first 4 modules you don\'t see value, contact us for a full refund — no questions asked. We\'re that confident.' },
   { q: 'Is this a recorded or live course?', a: 'Recorded — watch at your own pace, replay unlimited times. Course updates are added automatically and free forever.' },
@@ -57,45 +57,6 @@ const PAKISTANI_CITIES = [
   'Sargodha','Abbottabad','Sukkur','Larkana','Other'
 ]
 
-// Fake social proof toast data
-const TOAST_NAMES = ['Ahmed','Fatima','Usman','Ali','Ayesha','Hassan','Zainab','Bilal','Sana','Omar','Hira','Hamza','Maryam','Saad','Nadia']
-const TOAST_CITIES = ['Lahore','Karachi','Islamabad','Rawalpindi','Faisalabad','Multan','Peshawar','Quetta','Sialkot','Gujranwala']
-
-// ── Social Proof Toast ─────────────────────────────────────────────────────
-function SocialProofToast() {
-  const [toast, setToast] = useState<{ name: string; city: string; mins: number } | null>(null)
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    const rand = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)]
-    const show = () => {
-      setToast({ name: rand(TOAST_NAMES), city: rand(TOAST_CITIES), mins: 2 + Math.floor(Math.random() * 8) })
-      setVisible(true)
-      setTimeout(() => setVisible(false), 4500)
-      setTimeout(show, 15000 + Math.random() * 10000)
-    }
-    const t = setTimeout(show, 5000)
-    return () => clearTimeout(t)
-  }, [])
-
-  if (!toast) return null
-  return (
-    <div className={`pointer-events-none fixed bottom-20 left-4 z-50 transition-all duration-500 max-w-[280px] sm:max-w-xs ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-      <div className="pointer-events-auto flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white/95 px-3 py-2.5 shadow-lg backdrop-blur-sm">
-        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-50">
-          <CheckCircle className="h-4 w-4 text-blue-600" />
-        </div>
-        <div className="min-w-0 flex-1 text-xs leading-tight">
-          <div className="truncate font-semibold text-slate-800">{toast.name} from {toast.city}</div>
-          <div className="text-slate-500">enrolled {toast.mins} minutes ago</div>
-        </div>
-        <button onClick={() => setVisible(false)} className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-100">
-          <X className="h-3 w-3" />
-        </button>
-      </div>
-    </div>
-  )
-}
 
 
 // ── Module Accordion ───────────────────────────────────────────────────────
@@ -294,14 +255,14 @@ function WhatsAppTestimonials() {
 
 // ── Outcomes Grid ────────────────────────────────────────────────────────
 const OUTCOMES = [
-  { icon: '📸', title: 'AI Product Photography', price: '$300–$800', desc: 'Studio-quality shots for any brand.' },
-  { icon: '🎬', title: 'UGC Talking Ads', price: '$500–$2,000', desc: 'Avatars that sell on Meta & TikTok.' },
-  { icon: '🧠', title: 'AI Influencer Builds', price: '$2,000–$15,000', desc: 'Faceless personas with real income.' },
-  { icon: '🛍️', title: 'E-com Creative Sets', price: '$400–$1,200', desc: 'Full product creative kits per drop.' },
-  { icon: '💬', title: 'Multi-language Ads', price: '$300–$900', desc: 'Urdu, English, Arabic — one render.' },
-  { icon: '🎨', title: 'Brand Style Systems', price: '$600–$1,500', desc: 'Consistent AI aesthetic per brand.' },
-  { icon: '🎙️', title: 'AI Voiceover Reels', price: '$200–$600', desc: 'Hooks + voice + visuals — done.' },
-  { icon: '📈', title: 'Performance Creative', price: '$1,000–$5,000', desc: 'Iterative test creatives for ad spend.' },
+  { icon: '📸', title: 'AI Product Photography', price: 'High Demand', desc: 'Studio-quality shots for any brand.' },
+  { icon: '🎬', title: 'UGC Talking Ads', price: 'In-Demand Skill', desc: 'Avatars that sell on Meta & TikTok.' },
+  { icon: '🧠', title: 'AI Influencer Builds', price: 'Growing Market', desc: 'Faceless personas with real audience potential.' },
+  { icon: '🛍️', title: 'E-com Creative Sets', price: 'Popular Service', desc: 'Full product creative kits per drop.' },
+  { icon: '💬', title: 'Multi-language Ads', price: 'Global Reach', desc: 'Urdu, English, Arabic — one render.' },
+  { icon: '🎨', title: 'Brand Style Systems', price: 'Premium Skill', desc: 'Consistent AI aesthetic per brand.' },
+  { icon: '🎙️', title: 'AI Voiceover Reels', price: 'Quick Delivery', desc: 'Hooks + voice + visuals — done.' },
+  { icon: '📈', title: 'Performance Creative', price: 'Agency-Level', desc: 'Iterative test creatives for ad spend.' },
 ]
 
 function OutcomesGrid() {
@@ -331,10 +292,10 @@ function OutcomesGrid() {
 
 // ── Income Potential & Roadmap ─────────────────────────────────────────────
 const INCOMES = [
-  { icon: <MonitorSmartphone className="h-5 w-5 text-white" />, title: 'AI Product Photography', price: '$300 - $800', desc: 'Studio-grade product shots without a studio. Local + e-commerce clients.' },
-  { icon: <Mic className="h-5 w-5 text-white" />, title: 'UGC Talking Ad Videos', price: '$500 - $2,000', desc: 'Realistic AI avatars reading scripts for brand ads on Meta & TikTok.' },
-  { icon: <TrendingUp className="h-5 w-5 text-white" />, title: 'Monthly Brand Retainer', price: '$1,000 - $5,000', desc: 'Recurring content packages — 8 to 30 assets per brand per month.' },
-  { icon: <Star className="h-5 w-5 text-white" />, title: 'Faceless AI Influencer', price: '$2,000 - $15,000', desc: 'Build a viral AI persona. Brand deals, affiliate, sponsorships.' },
+  { icon: <MonitorSmartphone className="h-5 w-5 text-white" />, title: 'AI Product Photography', price: 'High Demand', desc: 'Studio-grade product shots without a studio. Local + e-commerce clients.' },
+  { icon: <Mic className="h-5 w-5 text-white" />, title: 'UGC Talking Ad Videos', price: 'In-Demand', desc: 'Realistic AI avatars reading scripts for brand ads on Meta & TikTok.' },
+  { icon: <TrendingUp className="h-5 w-5 text-white" />, title: 'Monthly Brand Retainer', price: 'Recurring', desc: 'Recurring content packages — 8 to 30 assets per brand per month.' },
+  { icon: <Star className="h-5 w-5 text-white" />, title: 'Faceless AI Influencer', price: 'Scalable', desc: 'Build an AI persona. Brand deals, affiliate, sponsorships potential.' },
 ]
 
 function IncomeAndRoadmap() {
@@ -347,7 +308,7 @@ function IncomeAndRoadmap() {
             Income Potential
           </div>
           <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl">
-            What students earn in 14 days
+            Skills you&apos;ll master in 14 days
           </h2>
         </div>
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -377,7 +338,7 @@ function IncomeAndRoadmap() {
             { day: 'DAY 1-5', step: '01', title: 'Foundations', desc: 'Master the AI stack — prompts, tools, workflows.' },
             { day: 'DAY 6-10', step: '02', title: 'First Asset', desc: 'Ship your first paid AI ad. Build your portfolio.' },
             { day: 'DAY 10-13', step: '03', title: 'First Client', desc: 'Outreach scripts + DMs. Sign your first paying brand.' },
-            { day: 'DAY 14', step: '04', title: 'Scale', desc: 'Retainer + faceless brand. $1K-$5K monthly target.' },
+            { day: 'DAY 14', step: '04', title: 'Scale', desc: 'Retainer + faceless brand. Build recurring client relationships.' },
           ].map((r, i) => (
             <div key={i} className="rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 shadow-glass card-premium-hover relative pt-10">
               <div className="absolute -top-3 left-6 rounded-full bg-[#1A233A] px-3 py-1 text-[10px] font-bold text-white uppercase tracking-widest">
@@ -579,11 +540,11 @@ export default function HomePage() {
           </span>
 
           <h1 className="mx-auto mt-3 max-w-4xl text-balance font-['Sora'] text-[28px] font-bold leading-[1.15] tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl md:text-5xl">
-            Master <span className="text-gradient">AI Video Generation</span> in 10 Days — Start Earning in USD
+            Master <span className="text-gradient">AI Video Generation</span> in 10 Days — Build Skills That Pay
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-balance text-sm leading-relaxed text-slate-500 sm:text-base">
-            Learn faceless YouTube automation, AI ad creation, and how to land high-paying global clients. No prior experience or expensive PC required. Land your first client during training or get your money back.
+            Learn faceless YouTube automation, AI ad creation, and client acquisition strategies. No prior experience or expensive PC required. A practical, results-oriented training built for Pakistan.
           </p>
 
           {/* <div className="mt-2 flex justify-center">
@@ -916,7 +877,7 @@ export default function HomePage() {
             Start <span className="text-blue-500">today.</span>
           </h2>
           <p className="mt-4 text-sm text-slate-500 sm:text-base max-w-md mx-auto">
-            Rs. {PRICE.toLocaleString()} today. Lifetime access. Money-back if you don't land a client during training.
+            Rs. {PRICE.toLocaleString()} today. Lifetime access. Money-back guarantee — see our <Link href="/terms" className="underline hover:text-blue-400">refund policy</Link>.
           </p>
           <Link
             href="/enroll"
@@ -927,12 +888,25 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Earnings Disclaimer */}
+      <div className="bg-slate-100 border-t border-slate-200 px-4 py-6 sm:px-6">
+        <p className="mx-auto max-w-4xl text-center text-[11px] leading-relaxed text-slate-400">
+          <strong className="text-slate-500">Disclaimer:</strong> AI Bootcamp Pakistan is an educational service. We do not guarantee any specific income or financial results. Income examples and testimonials represent individual student experiences and are not typical. Your results will vary based on effort, skills, experience, and market conditions. See our <Link href="/terms" className="underline hover:text-slate-600">Terms of Service</Link> for full details.
+        </p>
+      </div>
+
       {/* ── Footer ── */}
       <footer className="border-t border-slate-200 bg-slate-900 px-4 py-10 text-white/70 sm:px-6">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 text-center sm:flex-row sm:text-left">
           <div className="flex items-center gap-3">
             <div className="grid h-9 w-9 place-items-center rounded-xl gradient-brand text-white font-bold text-sm">AI</div>
             <div className="font-['Sora'] text-sm font-bold text-white">AI Bootcamp Pakistan</div>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
+            <Link href="/privacy" className="text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="text-white/60 hover:text-white transition-colors">Terms of Service</Link>
+            <a href="https://instagram.com/aivideobootcamppk" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors">Instagram</a>
+            <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors">WhatsApp</a>
           </div>
           <div className="text-xs text-white/40">© 2026 AI Bootcamp Pakistan. All rights reserved.</div>
         </div>
@@ -951,7 +925,7 @@ export default function HomePage() {
         </svg>
       </a>
 
-      <SocialProofToast />
+
     </div>
   )
 }
