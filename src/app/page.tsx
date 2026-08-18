@@ -493,6 +493,21 @@ export default function HomePage() {
         else if (ref.includes('tiktok')) localStorage.setItem('lead_source', 'tiktok')
         else if (ref.includes('youtube')) localStorage.setItem('lead_source', 'youtube')
       }
+
+      // Capture click IDs — most precise attribution signal from each ad platform
+      // Only store on first touch; never overwrite (preserve the original paid click)
+      const gclid = params.get('gclid')
+      if (gclid && !localStorage.getItem('lead_gclid')) {
+        localStorage.setItem('lead_gclid', gclid)
+        // Infer source from gclid if utm_source wasn't set
+        if (!localStorage.getItem('lead_source')) localStorage.setItem('lead_source', 'google')
+      }
+
+      const fbclid = params.get('fbclid')
+      if (fbclid && !localStorage.getItem('lead_fbclid')) {
+        localStorage.setItem('lead_fbclid', fbclid)
+        if (!localStorage.getItem('lead_source')) localStorage.setItem('lead_source', 'facebook')
+      }
     }
 
     const onScroll = () => setHeaderScrolled(window.scrollY > 20)

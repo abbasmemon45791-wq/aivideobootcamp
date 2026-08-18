@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS leads (
   utm_campaign VARCHAR(100),
   utm_content VARCHAR(255),
   user_agent TEXT,
+  gclid VARCHAR(255),  -- Google click ID (from ?gclid= param)
+  fbclid VARCHAR(255), -- Meta click ID (from ?fbclid= param)
   
   -- Access Tracking
   access_sent BOOLEAN DEFAULT FALSE,
@@ -31,7 +33,9 @@ CREATE TABLE IF NOT EXISTS leads (
 --   ADD COLUMN IF NOT EXISTS utm_medium VARCHAR(100),
 --   ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(100),
 --   ADD COLUMN IF NOT EXISTS utm_content VARCHAR(255),
---   ADD COLUMN IF NOT EXISTS user_agent TEXT;
+--   ADD COLUMN IF NOT EXISTS user_agent TEXT,
+--   ADD COLUMN IF NOT EXISTS gclid VARCHAR(255),
+--   ADD COLUMN IF NOT EXISTS fbclid VARCHAR(255);
 -- ==========================================
 
 -- PAYMENTS table: Step 3 screenshot submission

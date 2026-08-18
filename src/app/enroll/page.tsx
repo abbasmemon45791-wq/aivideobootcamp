@@ -125,6 +125,9 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
           utm_medium,
           utm_campaign,
           utm_content,
+          // Click IDs — most precise attribution signal; read from localStorage (set on first touch)
+          gclid: localStorage.getItem('lead_gclid') || undefined,
+          fbclid: localStorage.getItem('lead_fbclid') || undefined,
           eventId: leadEventId,
         }),
       })
@@ -542,6 +545,20 @@ export default function EnrollPage() {
         
       const utmContent = params.get('utm_content')
       if (utmContent) localStorage.setItem('lead_utm_content', utmContent)
+
+      // Capture click IDs — most precise attribution signal from each ad platform
+      // Only store on first touch; never overwrite (preserve the original paid click)
+      const gclid = params.get('gclid')
+      if (gclid && !localStorage.getItem('lead_gclid')) {
+        localStorage.setItem('lead_gclid', gclid)
+        if (!localStorage.getItem('lead_source')) localStorage.setItem('lead_source', 'google')
+      }
+
+      const fbclid = params.get('fbclid')
+      if (fbclid && !localStorage.getItem('lead_fbclid')) {
+        localStorage.setItem('lead_fbclid', fbclid)
+        if (!localStorage.getItem('lead_source')) localStorage.setItem('lead_source', 'facebook')
+      }
     }
   }, [])
 

@@ -7,7 +7,7 @@ const hashData = (data: string) => crypto.createHash('sha256').update(data).dige
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, whatsapp, source, utm_medium, utm_campaign, utm_content, eventId } = body
+    const { name, email, whatsapp, source, utm_medium, utm_campaign, utm_content, eventId, gclid, fbclid } = body
 
     // Validation
     if (!name || name.trim().length < 2 || name.length > 100)
@@ -47,6 +47,8 @@ export async function POST(req: NextRequest) {
         utm_medium: utm_medium?.trim() || null,
         utm_campaign: utm_campaign?.trim() || null,
         utm_content: utm_content?.trim() || null,
+        gclid: gclid?.trim() || null,
+        fbclid: fbclid?.trim() || null,
       })
       .select('id')
       .single()
