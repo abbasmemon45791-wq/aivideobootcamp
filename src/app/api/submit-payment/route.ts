@@ -96,6 +96,11 @@ export async function POST(req: NextRequest) {
         
         const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? req.headers.get('x-real-ip') ?? 'unknown'
 
+        // Extract Meta browser cookies for CAPI signal quality
+        const cookieHeader = req.headers.get('cookie') ?? ''
+        const fbc = cookieHeader.match(/_fbc=([^;]+)/)?.[1]
+        const fbp = cookieHeader.match(/_fbp=([^;]+)/)?.[1]
+
         await fetch(`https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -105,6 +110,7 @@ export async function POST(req: NextRequest) {
                 event_name: 'Purchase',
                 event_time: Math.floor(Date.now() / 1000),
                 action_source: 'website',
+                event_source_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aivideobootcamp.vercel.app'}/enroll`,
                 // event_id matches the browser fbq() call — Meta deduplicates automatically
                 ...(eventId && { event_id: eventId }),
                 user_data: {
@@ -112,6 +118,9 @@ export async function POST(req: NextRequest) {
                   ...(hashedPhone && { ph: [hashedPhone] }),
                   client_ip_address: ip,
                   client_user_agent: req.headers.get('user-agent') ?? '',
+                  // _fbc/_fbp cookies — highest-quality signal for matching CAPI events to ad clicks
+                  ...(fbc && { fbc }),
+                  ...(fbp && { fbp }),
                 },
                 custom_data: {
                   currency: 'PKR',
