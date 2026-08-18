@@ -7,7 +7,7 @@ const hashData = (data: string) => crypto.createHash('sha256').update(data).dige
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, whatsapp, source, utm_medium, utm_campaign, utm_content } = body
+    const { name, email, whatsapp, source, utm_medium, utm_campaign, utm_content, eventId } = body
 
     // Validation
     if (!name || name.trim().length < 2 || name.length > 100)
@@ -72,12 +72,18 @@ export async function POST(req: NextRequest) {
                 event_name: 'Lead',
                 event_time: Math.floor(Date.now() / 1000),
                 action_source: 'website',
+                // event_id matches the browser fbq() call — Meta deduplicates automatically
+                ...(eventId && { event_id: eventId }),
                 user_data: {
                   em: [hashedEmail],
                   ...(hashedPhone && { ph: [hashedPhone] }),
                   client_ip_address: ip,
                   client_user_agent: req.headers.get('user-agent') ?? '',
-                }
+                },
+                custom_data: {
+                  currency: 'PKR',
+                  value: Number(process.env.COURSE_PRICE) || 2900,
+                },
               }
             ]
           })

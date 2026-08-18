@@ -1,6 +1,5 @@
 'use client'
 import { useState, useCallback, useEffect } from 'react'
-import { sendGAEvent } from '@next/third-parties/google'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -17,6 +16,36 @@ const ACCOUNT_TITLE    = process.env.NEXT_PUBLIC_ACCOUNT_TITLE    ?? 'Farman Ali
 const WHATSAPP_SUPPORT = process.env.NEXT_PUBLIC_WHATSAPP_SUPPORT ?? '923180298090'
 
 const STEP_LABELS: Record<number, string> = { 1: 'Your Details', 2: 'Send Payment', 3: 'Upload Proof' }
+
+// ── Google Ads helpers ──────────────────────────────────────────────────────
+// Retries once after 1 s if gtag hasn't loaded yet (race condition guard)
+function gtagSafe(params: Record<string, unknown>) {
+  const fire = () => {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'conversion', params)
+    }
+  }
+  if (typeof window !== 'undefined' && (window as any).gtag) {
+    fire()
+  } else {
+    setTimeout(fire, 1500)
+  }
+}
+
+// Push hashed user data before every conversion for Enhanced Conversions
+// Google hashes the raw values server-side — we just send plaintext here
+function setUserData(email: string, phone: string) {
+  if (typeof window === 'undefined' || !(window as any).gtag) return
+  // normalise phone: digits only, with country code
+  const normPhone = phone.replace(/\D/g, '')
+  const e164 = normPhone.startsWith('92') ? `+${normPhone}` :
+               normPhone.startsWith('0') ? `+92${normPhone.slice(1)}` :
+               `+${normPhone}`
+  ;(window as any).gtag('set', 'user_data', {
+    email,
+    phone_number: e164,
+  })
+}
 
 // ── Step Indicator ─────────────────────────────────────────────────────────
 function StepBar({ step }: { step: number }) {
@@ -48,7 +77,7 @@ function StepBar({ step }: { step: number }) {
 }
 
 // ── Step 1 — Details ───────────────────────────────────────────────────────
-function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; email: string }) => void }) {
+function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; email: string; whatsapp: string }) => void }) {
   const [name, setName]     = useState('')
   const [email, setEmail]   = useState('')
   const [wa, setWa]         = useState('')
@@ -82,6 +111,9 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
       const utm_campaign = params.get('utm_campaign') || localStorage.getItem('lead_utm_campaign') || undefined
       const utm_content = params.get('utm_content') || localStorage.getItem('lead_utm_content') || undefined
 
+      // Generate event_id BEFORE the fetch — same value goes to CAPI (via API body) AND fbq()
+      const leadEventId = crypto.randomUUID()
+
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,21 +125,27 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
           utm_medium,
           utm_campaign,
           utm_content,
+          eventId: leadEventId,
         }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
       if (typeof window !== 'undefined' && (window as any).fbq) {
-        (window as any).fbq('track', 'Lead');
+        (window as any).fbq('track', 'Lead', {}, { eventID: leadEventId });
       }
-      sendGAEvent(
-        'event', 
-        'conversion', 
-        { send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_LEAD_LABEL}` }
-      );
 
-      onDone(data.id, { name: name.trim(), email: email.trim() })
+      // Enhanced Conversions — push user identity before firing Lead event
+      setUserData(email.trim().toLowerCase(), wa.trim())
+
+      // Google Ads Lead conversion (with value for Smart Bidding)
+      gtagSafe({
+        send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_LEAD_LABEL}`,
+        value: COURSE_PRICE,
+        currency: 'PKR',
+      })
+
+      onDone(data.id, { name: name.trim(), email: email.trim().toLowerCase(), whatsapp: wa.trim() })
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
       setLoading(false)
@@ -237,7 +275,15 @@ function Step2({ onContinue, onBack }: { onContinue: () => void; onBack: () => v
 }
 
 // ── Step 3 — Upload Proof ──────────────────────────────────────────────────
-function Step3({ leadId, onBack }: { leadId: string; onBack: () => void }) {
+function Step3({
+  leadId,
+  onBack,
+  userData,
+}: {
+  leadId: string
+  onBack: () => void
+  userData: { email: string; whatsapp: string }
+}) {
   const router = useRouter()
   const [file, setFile]           = useState<File | null>(null)
   const [preview, setPreview]     = useState<string | null>(null)
@@ -290,6 +336,10 @@ function Step3({ leadId, onBack }: { leadId: string; onBack: () => void }) {
 
     try {
       const base64 = await compressImageToBase64(file)
+
+      // Generate event_id BEFORE the fetch — same value goes to CAPI (via API body) AND fbq()
+      const purchaseEventId = crypto.randomUUID()
+
       const res = await fetch('/api/submit-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -301,23 +351,26 @@ function Step3({ leadId, onBack }: { leadId: string; onBack: () => void }) {
           recipientNumber: (verifyResult as Record<string,unknown>)?.recipientNumber,
           senderName: (verifyResult as Record<string,unknown>)?.senderName,
           direction: (verifyResult as Record<string,unknown>)?.direction,
+          eventId: purchaseEventId,
         }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
       if (typeof window !== 'undefined' && (window as any).fbq) {
-        (window as any).fbq('track', 'Purchase', { value: COURSE_PRICE, currency: 'PKR' });
+        (window as any).fbq('track', 'Purchase', { value: COURSE_PRICE, currency: 'PKR' }, { eventID: purchaseEventId });
       }
-      sendGAEvent(
-        'event', 
-        'conversion', 
-        { 
-          send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL}`,
-          value: COURSE_PRICE, 
-          currency: 'PKR' 
-        }
-      );
+
+      // Enhanced Conversions — re-push user identity in case session was resumed
+      setUserData(userData.email, userData.whatsapp)
+
+      // Google Ads Purchase conversion — real value + transaction_id for deduplication
+      gtagSafe({
+        send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL}`,
+        value: COURSE_PRICE,
+        currency: 'PKR',
+        transaction_id: (verifyResult as Record<string,unknown>)?.transactionId ?? '',
+      })
 
       setDone(true)
     } catch (e: unknown) {
@@ -463,6 +516,7 @@ function compressImageToBase64(file: File, maxWidth = 1200, quality = 0.7): Prom
 export default function EnrollPage() {
   const [step, setStep]   = useState(1)
   const [leadId, setLeadId] = useState<string | null>(null)
+  const [userData, setUserDataState] = useState<{ email: string; whatsapp: string }>({ email: '', whatsapp: '' })
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -529,13 +583,17 @@ export default function EnrollPage() {
             <StepBar step={step} />
 
             {step === 1 && (
-              <Step1 onDone={(id) => { setLeadId(id); setStep(2) }} />
+              <Step1 onDone={(id, data) => {
+                setLeadId(id)
+                setUserDataState({ email: data.email, whatsapp: data.whatsapp })
+                setStep(2)
+              }} />
             )}
             {step === 2 && (
               <Step2 onContinue={() => setStep(3)} onBack={() => setStep(1)} />
             )}
             {step === 3 && leadId && (
-              <Step3 leadId={leadId} onBack={() => setStep(2)} />
+              <Step3 leadId={leadId} onBack={() => setStep(2)} userData={userData} />
             )}
           </div>
         </div>

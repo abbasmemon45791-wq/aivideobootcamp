@@ -19,9 +19,9 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image' },
 }
 
-import { GoogleAnalytics } from '@next/third-parties/google'
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const AW_ID = process.env.NEXT_PUBLIC_GA_ID || 'AW-18327926458'
+
   return (
     <html lang="en" className={`${inter.variable} ${sora.variable} ${jakarta.variable}`}>
       <body className="font-[Inter,sans-serif] antialiased">
@@ -40,8 +40,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             fbq('track', 'PageView');
           `}
         </Script>
+
+        {/* Google Ads gtag — must load BEFORE any conversion calls */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${AW_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${AW_ID}', {
+              allow_enhanced_conversions: true
+            });
+          `}
+        </Script>
+
         {children}
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID as string || ''} />
       </body>
     </html>
   )

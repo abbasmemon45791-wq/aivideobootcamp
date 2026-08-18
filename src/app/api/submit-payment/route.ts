@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
       recipientNumber,
       senderName,
       direction,
+      eventId,
     } = body
 
     if (!leadId || !fileBase64) {
@@ -104,6 +105,8 @@ export async function POST(req: NextRequest) {
                 event_name: 'Purchase',
                 event_time: Math.floor(Date.now() / 1000),
                 action_source: 'website',
+                // event_id matches the browser fbq() call — Meta deduplicates automatically
+                ...(eventId && { event_id: eventId }),
                 user_data: {
                   em: [hashedEmail],
                   ...(hashedPhone && { ph: [hashedPhone] }),
@@ -112,7 +115,7 @@ export async function POST(req: NextRequest) {
                 },
                 custom_data: {
                   currency: 'PKR',
-                  value: 2900,
+                  value: Number(process.env.COURSE_PRICE) || 2900,
                 }
               }
             ]
