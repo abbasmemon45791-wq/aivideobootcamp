@@ -18,12 +18,23 @@ const WHATSAPP_SUPPORT = process.env.NEXT_PUBLIC_WHATSAPP_SUPPORT ?? '9231802980
 const STEP_LABELS: Record<number, string> = { 1: 'Your Details', 2: 'Send Payment', 3: 'Upload Proof' }
 
 // ── Google Ads helpers ──────────────────────────────────────────────────────
-// Retries once after 1 s if gtag hasn't loaded yet (race condition guard)
-function gtagSafe(params: Record<string, unknown>) {
+// Fires a conversion event, optionally setting Enhanced Conversions user_data
+// first. Retries once after 1.5s if gtag hasn't loaded yet (race condition guard).
+function gtagSafe(
+  params: Record<string, unknown>,
+  userData?: { email: string; phone: string }
+) {
   const fire = () => {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'conversion', params)
+    if (typeof window === 'undefined' || !(window as any).gtag) return
+    if (userData) {
+      // Normalise phone to E.164 — must be set BEFORE the conversion event
+      const normPhone = userData.phone.replace(/\D/g, '')
+      const e164 = normPhone.startsWith('92') ? `+${normPhone}` :
+                   normPhone.startsWith('0')  ? `+92${normPhone.slice(1)}` :
+                   `+${normPhone}`
+      ;(window as any).gtag('set', 'user_data', { email: userData.email, phone_number: e164 })
     }
+    ;(window as any).gtag('event', 'conversion', params)
   }
   if (typeof window !== 'undefined' && (window as any).gtag) {
     fire()
@@ -32,19 +43,15 @@ function gtagSafe(params: Record<string, unknown>) {
   }
 }
 
-// Push hashed user data before every conversion for Enhanced Conversions
-// Google hashes the raw values server-side — we just send plaintext here
+// Keep setUserData as a standalone helper for cases where we need to set
+// user identity without firing a conversion (currently unused but kept for clarity)
 function setUserData(email: string, phone: string) {
   if (typeof window === 'undefined' || !(window as any).gtag) return
-  // normalise phone: digits only, with country code
   const normPhone = phone.replace(/\D/g, '')
   const e164 = normPhone.startsWith('92') ? `+${normPhone}` :
-               normPhone.startsWith('0') ? `+92${normPhone.slice(1)}` :
+               normPhone.startsWith('0')  ? `+92${normPhone.slice(1)}` :
                `+${normPhone}`
-  ;(window as any).gtag('set', 'user_data', {
-    email,
-    phone_number: e164,
-  })
+  ;(window as any).gtag('set', 'user_data', { email, phone_number: e164 })
 }
 
 // ── Step Indicator ─────────────────────────────────────────────────────────
@@ -138,15 +145,15 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
         (window as any).fbq('track', 'Lead', {}, { eventID: leadEventId });
       }
 
-      // Enhanced Conversions — push user identity before firing Lead event
-      setUserData(email.trim().toLowerCase(), wa.trim())
-
-      // Google Ads Lead conversion (with value for Smart Bidding)
-      gtagSafe({
-        send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_LEAD_LABEL}`,
-        value: COURSE_PRICE,
-        currency: 'PKR',
-      })
+      // Google Ads Lead conversion — user_data set atomically inside gtagSafe
+      gtagSafe(
+        {
+          send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_LEAD_LABEL}`,
+          value: COURSE_PRICE,
+          currency: 'PKR',
+        },
+        { email: email.trim().toLowerCase(), phone: wa.trim() }
+      )
 
       onDone(data.id, { name: name.trim(), email: email.trim().toLowerCase(), whatsapp: wa.trim() })
     } catch (e: unknown) {
@@ -364,16 +371,16 @@ function Step3({
         (window as any).fbq('track', 'Purchase', { value: COURSE_PRICE, currency: 'PKR' }, { eventID: purchaseEventId });
       }
 
-      // Enhanced Conversions — re-push user identity in case session was resumed
-      setUserData(userData.email, userData.whatsapp)
-
-      // Google Ads Purchase conversion — real value + transaction_id for deduplication
-      gtagSafe({
-        send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL}`,
-        value: COURSE_PRICE,
-        currency: 'PKR',
-        transaction_id: (verifyResult as Record<string,unknown>)?.transactionId ?? '',
-      })
+      // Google Ads Purchase conversion — user_data set atomically inside gtagSafe
+      gtagSafe(
+        {
+          send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL}`,
+          value: COURSE_PRICE,
+          currency: 'PKR',
+          transaction_id: (verifyResult as Record<string,unknown>)?.transactionId ?? '',
+        },
+        { email: userData.email, phone: userData.whatsapp }
+      )
 
       setDone(true)
     } catch (e: unknown) {
