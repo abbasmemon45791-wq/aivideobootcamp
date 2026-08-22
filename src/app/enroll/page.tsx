@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, ArrowRight, User, Wallet, Upload, Check,
   Lock, LoaderCircle, Copy, Shield, Image as ImageIcon,
-  X, AlertCircle, CheckCircle, ChevronDown, MessageCircle
+  X, AlertCircle, CheckCircle, ChevronDown, MessageCircle, Star
 } from 'lucide-react'
 
 const COURSE_PRICE = 2900
@@ -250,7 +250,7 @@ function Step2({ onContinue, onBack }: { onContinue: () => void; onBack: () => v
       <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-700">
         <Wallet className="h-3.5 w-3.5" /> Step 2 of 3
       </div>
-      <h2 className="mt-3 font-[&#39;Sora&#39;] text-2xl font-extrabold leading-tight sm:text-3xl"
+      <h2 className="mt-3 font-['Sora'] text-2xl font-extrabold leading-tight sm:text-3xl"
         style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
         Send Your Payment.
       </h2>
@@ -259,14 +259,53 @@ function Step2({ onContinue, onBack }: { onContinue: () => void; onBack: () => v
         Send <strong className="text-slate-800 mx-1">exactly Rs. {COURSE_PRICE.toLocaleString()}</strong> to any account below.
       </p>
 
+      {/* Social Proof & Trust Header Banner (Step 3) */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200/80 bg-emerald-50/60 p-3 text-xs text-slate-700">
+        <div className="flex items-center gap-1.5 font-medium">
+          <div className="flex text-amber-500">
+            <Star className="h-3.5 w-3.5 fill-amber-400" />
+            <Star className="h-3.5 w-3.5 fill-amber-400" />
+            <Star className="h-3.5 w-3.5 fill-amber-400" />
+            <Star className="h-3.5 w-3.5 fill-amber-400" />
+            <Star className="h-3.5 w-3.5 fill-amber-400" />
+          </div>
+          <span className="font-bold text-slate-900">4.9/5</span>
+          <span className="text-slate-500">(1,120+ Enrolled)</span>
+        </div>
+        <div className="flex items-center gap-1 font-semibold text-emerald-800">
+          <Shield className="h-3.5 w-3.5 text-emerald-600" /> 100% Refund Policy
+        </div>
+      </div>
+
       {/* Payment Options */}
-      <div className="mt-5 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm">
+      <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm">
         <BankRow bank="EasyPaisa" title={ACCOUNT_TITLE} num={EASYPAISA_NUMBER} colorClass="text-emerald-600" />
         {JAZZCASH_NUMBER && <BankRow bank="JazzCash" num={JAZZCASH_NUMBER} colorClass="text-rose-600" />}
         {HBL_ACCOUNT && <BankRow bank="HBL (Bank Transfer)" title={ACCOUNT_TITLE} num={HBL_ACCOUNT} colorClass="text-teal-700" />}
       </div>
 
-
+      {/* Direct WhatsApp Support Assistance Button (Step 4) */}
+      <div className="mt-4 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 text-left shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-600 text-white shadow-md">
+            <MessageCircle className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-900">Having trouble paying or need help?</h4>
+            <p className="mt-0.5 text-xs text-slate-600">
+              Our team is online right now to assist you step-by-step on WhatsApp.
+            </p>
+            <a
+              href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent("Hi! I am on Step 2 (Payment) for the AI Bootcamp and I need help completing my payment.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2.5 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
+            >
+              <MessageCircle className="h-4 w-4" /> Facing Issue? Chat on WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
 
       <button onClick={onContinue}
         className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.02]"

@@ -52,9 +52,9 @@ const FAQS = [
 ]
 
 const PAKISTANI_CITIES = [
-  'Lahore','Karachi','Islamabad','Rawalpindi','Faisalabad','Multan',
-  'Peshawar','Quetta','Sialkot','Gujranwala','Hyderabad','Bahawalpur',
-  'Sargodha','Abbottabad','Sukkur','Larkana','Other'
+  'Lahore', 'Karachi', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Multan',
+  'Peshawar', 'Quetta', 'Sialkot', 'Gujranwala', 'Hyderabad', 'Bahawalpur',
+  'Sargodha', 'Abbottabad', 'Sukkur', 'Larkana', 'Other'
 ]
 
 
@@ -124,7 +124,7 @@ function WhatsAppChat({ name, avatarInitial, messages }: { name: string, avatarI
           <div className="h-2 w-3 rounded-[2px] bg-white/80" />
         </div>
       </div>
-      
+
       {/* Header */}
       <div className="flex items-center gap-3 bg-[#202C33] px-3 py-2">
         <ArrowRight className="h-5 w-5 rotate-180 text-white" />
@@ -207,7 +207,7 @@ function WhatsAppTestimonials() {
           { isMe: true, time: '4:16 PM', text: 'MashAllah' }
         ]}
       />
-      
+
       <WhatsAppChat
         name="Nimra batch 1"
         avatarInitial="N"
@@ -218,27 +218,27 @@ function WhatsAppTestimonials() {
             time: '8:50 AM',
             image: (
               <div className="flex h-48 w-full flex-col items-center justify-center bg-slate-900 text-white p-3">
-                 <div className="text-[10px] font-semibold w-full text-left mb-2">Overview</div>
-                 <div className="grid grid-cols-2 gap-2 w-full">
-                    <div className="bg-slate-800 rounded p-2 text-left">
-                       <div className="text-[9px] text-slate-400">Views</div>
-                       <div className="font-bold text-sm">2,824,240</div>
-                    </div>
-                    <div className="bg-slate-800 rounded p-2 text-left">
-                       <div className="text-[9px] text-slate-400">Accounts reached</div>
-                       <div className="font-bold text-sm">2,170,610</div>
-                    </div>
-                 </div>
-                 <div className="grid grid-cols-2 gap-2 w-full mt-2">
-                    <div className="bg-slate-800 rounded p-2 text-left">
-                       <div className="text-[9px] text-slate-400">Avg watch time</div>
-                       <div className="font-bold text-sm">11s</div>
-                    </div>
-                    <div className="bg-slate-800 rounded p-2 text-left">
-                       <div className="text-[9px] text-slate-400">Follows</div>
-                       <div className="font-bold text-sm">5,240</div>
-                    </div>
-                 </div>
+                <div className="text-[10px] font-semibold w-full text-left mb-2">Overview</div>
+                <div className="grid grid-cols-2 gap-2 w-full">
+                  <div className="bg-slate-800 rounded p-2 text-left">
+                    <div className="text-[9px] text-slate-400">Views</div>
+                    <div className="font-bold text-sm">2,824,240</div>
+                  </div>
+                  <div className="bg-slate-800 rounded p-2 text-left">
+                    <div className="text-[9px] text-slate-400">Accounts reached</div>
+                    <div className="font-bold text-sm">2,170,610</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 w-full mt-2">
+                  <div className="bg-slate-800 rounded p-2 text-left">
+                    <div className="text-[9px] text-slate-400">Avg watch time</div>
+                    <div className="font-bold text-sm">11s</div>
+                  </div>
+                  <div className="bg-slate-800 rounded p-2 text-left">
+                    <div className="text-[9px] text-slate-400">Follows</div>
+                    <div className="font-bold text-sm">5,240</div>
+                  </div>
+                </div>
               </div>
             ),
             text: 'Viral 😍'
@@ -405,7 +405,7 @@ function SkoolTestimonials() {
             Ye sab posts hamari private Skool community se hain — <span className="font-semibold text-slate-900">726+ AI creators</span> ke real results aur experiences.
           </p>
         </div>
-        
+
         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
           {SKOOL_TESTIMONIALS.map((t, i) => (
             <div key={i} className={`flex flex-col rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 shadow-glass card-premium-hover ${t.fullWidth ? 'md:col-span-2 max-w-4xl mx-auto w-full' : ''}`}>
@@ -414,7 +414,7 @@ function SkoolTestimonials() {
                 <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">{t.tag}</span>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed mb-6">{t.desc}</p>
-              
+
               <div className="mt-auto w-full rounded-xl overflow-hidden border border-slate-100 shadow-sm bg-white">
                 <div className="aspect-[16/9] w-full relative bg-slate-50 flex items-center justify-center">
                   <div className="text-slate-400 text-xs flex flex-col items-center gap-2">
