@@ -9,7 +9,7 @@ const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-jakart
 
 export const metadata: Metadata = {
   title: 'AI Video Bootcamp Pakistan — Learn & Earn in USD',
-  description: "Pakistan's #1 AI Video Creator training. Master AI ad generation, faceless YouTube automation, and client outreach in 10 days. Land your first paying client or your money back.",
+  description: "Pakistan's #1 AI Video Creator training. Master AI ad generation, faceless YouTube automation, and client outreach. Land your first paying client or your money back.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://yourdomain.com'),
   openGraph: {
     type: 'website',

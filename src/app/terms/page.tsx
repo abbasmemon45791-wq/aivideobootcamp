@@ -67,10 +67,10 @@ export default function TermsOfService() {
           </p>
           <ul className="list-disc pl-6 space-y-1">
             <li>If after watching the first 4 modules you do not find value in the course, you may request a full refund</li>
-            <li>Refund requests must be made within 14 days of enrollment</li>
+            <li>Refund requests must be made within the eligible refund window after enrollment</li>
             <li>To request a refund, contact us via WhatsApp at <a href="https://wa.me/923194448530" className="text-blue-600 hover:underline">+92 319 4448530</a></li>
             <li>Refunds will be processed within 7–10 business days via the same payment method used for enrollment</li>
-            <li>No refunds will be issued after 14 days from the date of enrollment or after accessing more than 50% of the course content</li>
+            <li>No refunds will be issued after the eligible refund period or after accessing more than 50% of the course content</li>
           </ul>
 
           <h2>6. Intellectual Property</h2>

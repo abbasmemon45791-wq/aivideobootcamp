@@ -21,20 +21,20 @@ const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '923194448530
 const YOUTUBE_EMBED = 'https://www.youtube.com/embed/oxlf7CQxPP4?rel=0&modestbranding=1&playsinline=1'
 
 const MODULES = [
-  { num: '01', title: 'Welcome to the Future', desc: 'Course overview, what you\'ll build, and the tools we\'ll use throughout.' },
-  { num: '02', title: 'AI Ka Dimag Samjho', desc: 'How AI actually thinks — prompts, context windows, and why this matters for content creation.' },
-  { num: '03', title: 'Prompt Engineering — Asli Game Yahan Hai', desc: 'The exact prompt structures that get professional-quality outputs every single time.' },
-  { num: '04', title: 'AI Image Generation — Yahan Se Maza Shuru Hota Hai', desc: 'Midjourney, Flux, Ideogram — create stunning visuals for ads and social pages without a designer.' },
-  { num: '05', title: 'AI Voice & Audio — Bina Mic Ke Studio Quality', desc: 'ElevenLabs, Suno, and free alternatives to produce broadcast-quality voiceovers and music.' },
-  { num: '06', title: 'AI Video Generation — Lights, Camera, No Crew Needed', desc: 'Kling, Runway, Pika — create cinematic video from text. One of the highest-demand creative skills today.' },
-  { num: '07', title: 'Editing & Final Ad Assembly — Jahan Raw Becomes Ready', desc: 'CapCut Pro workflows, subtitle automation, color grading, and the exact export settings for every platform.' },
-  { num: '08', title: 'AI Influencer & Faceless Content — Bina Chehra Dikhaye Famous Ho Jao', desc: 'Build a faceless brand, grow to monetization, and run pages that earn while you sleep.' },
-  { num: '09', title: 'Clients Lao, Paise Kamao — Skill Ko Business Banao', desc: 'Cold outreach scripts, pricing, contracts, and how to close your first client in under 14 days.' },
-  { num: '10', title: 'Koi Bhi Viral Video Dekho — Wohi Banao', desc: 'Reverse-engineer any viral video with AI. The system that works forever regardless of trends.' },
+  { num: '01', title: 'Welcome to the Future', desc: 'Course ka overview, aap kya seekhenge aur build karenge, aur pure course mein kaunse tools use honge.' },
+  { num: '02', title: 'AI Ka Dimag Samjho', desc: 'AI kaise sochta aur kaam karta hai — prompts, context windows, aur content creation ke liye iski importance.' },
+  { num: '03', title: 'Prompt Engineering — Asli Game Yahan Hai', desc: 'Woh exact prompt formulas aur structures jo aapko har baar professional-quality outputs dein.' },
+  { num: '04', title: 'AI Image Generation — Yahan Se Maza Shuru Hota Hai', desc: 'Midjourney, Flux, Ideogram — bina designer ke ads aur social media ke liye stunning visuals banao.' },
+  { num: '05', title: 'AI Voice & Audio — Bina Mic Ke Studio Quality', desc: 'ElevenLabs, Suno, aur free tools — bina mic aur studio ke professional voiceovers aur music generate karo.' },
+  { num: '06', title: 'AI Video Generation — Lights, Camera, No Crew Needed', desc: 'Kling, Runway, Pika — text se high-quality cinematic videos banao. Aaj ki sab se high-demand creative skill.' },
+  { num: '07', title: 'Editing & Final Ad Assembly — Jahan Raw Becomes Ready', desc: 'CapCut Pro workflows, auto-subtitles, color grading, aur har platform ke liye perfect export settings.' },
+  { num: '08', title: 'AI Influencer & Faceless Content — Bina Chehra Dikhaye Famous Ho Jao', desc: 'Bina chehra dikhaye apna brand banao, page monetize karo, aur aisi automated content chalao jo continuous earning de.' },
+  { num: '09', title: 'Clients Lao, Paise Kamao — Skill Ko Business Banao', desc: 'Cold outreach scripts, pricing strategies, contracts, aur pehla client close karne ki proven technique.' },
+  { num: '10', title: 'Koi Bhi Viral Video Dekho — Wohi Banao', desc: 'Kisi bhi viral video ko AI se reverse-engineer karo aur exact waise hi high-performing viral content banao.' },
 ]
 
 const REVIEWS = [
-  { name: 'Ali Hassan', city: 'Lahore', tag: 'Client Work', text: 'Pehla AI ad order close kiya! Sirf 9 din training ke baad. Course ne sab seekha diya.' },
+  { name: 'Ali Hassan', city: 'Lahore', tag: 'Client Work', text: 'Pehla AI ad order close kiya! Training ke foran baad. Course ne sab seekha diya.' },
   { name: 'Fatima Raza', city: 'Karachi', tag: 'Content Creator', text: 'Facebook bonus program se earnings aane lagi sirf AI content se. Yeh course alag hi level ka hai.' },
   { name: 'Usman Malik', city: 'Islamabad', tag: 'Views', text: '2.8 million views ek video pe! AI podcast content ka koi jawab nahi.' },
   { name: 'Ayesha Khan', city: 'Rawalpindi', tag: 'Freelancing', text: 'Upwork pe pehla project close kiya. Module 9 ne game change kar diya.' },
@@ -45,7 +45,7 @@ const REVIEWS = [
 const FAQS = [
   { q: 'How will I receive the course?', a: 'After payment verification, you\'ll receive an invite link to our Learning Management System (LMS) via email and WhatsApp. All videos are hosted there — watch on any device, anytime.' },
   { q: 'Is this for complete beginners?', a: 'Yes. If you have a smartphone and basic internet, you can do this. We start from zero — no prior design, video, or tech experience needed.' },
-  { q: 'How soon can I start using these skills?', a: 'Most students start building their portfolio and reaching out to potential clients within 14–30 days of completing the course. Module 9 is specifically about client acquisition strategies.' },
+  { q: 'How soon can I start using these skills?', a: 'Most students start building their portfolio and reaching out to potential clients right after completing the course. Module 9 is specifically about client acquisition strategies.' },
   { q: 'Can I use free tools throughout?', a: 'Yes. We teach premium tools but also include a Bonus module on accessing paid AI tools for free — legally. Many students never pay for tools.' },
   { q: 'What\'s the refund policy?', a: 'If after watching the first 4 modules you don\'t see value, contact us for a full refund — no questions asked. We\'re that confident.' },
   { q: 'Is this a recorded or live course?', a: 'Recorded — watch at your own pace, replay unlimited times. Course updates are added automatically and free forever.' },
@@ -306,7 +306,7 @@ function IncomeAndRoadmap() {
             Income Potential
           </div>
           <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl">
-            Skills you&apos;ll master in 14 days
+            Skills you&apos;ll master in this bootcamp
           </h2>
         </div>
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -325,7 +325,7 @@ function IncomeAndRoadmap() {
         {/* Roadmap */}
         <div className="mt-24 text-center">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-100/50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
-            14-Day Roadmap
+            Bootcamp Roadmap
           </div>
           <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl">
             From zero to first paycheck
@@ -333,10 +333,10 @@ function IncomeAndRoadmap() {
         </div>
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { day: 'DAY 1-5', step: '01', title: 'Foundations', desc: 'Master the AI stack — prompts, tools, workflows.' },
-            { day: 'DAY 6-10', step: '02', title: 'First Asset', desc: 'Ship your first paid AI ad. Build your portfolio.' },
-            { day: 'DAY 10-13', step: '03', title: 'First Client', desc: 'Outreach scripts + DMs. Sign your first paying brand.' },
-            { day: 'DAY 14', step: '04', title: 'Scale', desc: 'Retainer + faceless brand. Build recurring client relationships.' },
+            { day: 'PHASE 1', step: '01', title: 'Foundations', desc: 'Master the AI stack — prompts, tools, workflows.' },
+            { day: 'PHASE 2', step: '02', title: 'First Asset', desc: 'Ship your first paid AI ad. Build your portfolio.' },
+            { day: 'PHASE 3', step: '03', title: 'First Client', desc: 'Outreach scripts + DMs. Sign your first paying brand.' },
+            { day: 'PHASE 4', step: '04', title: 'Scale', desc: 'Retainer + faceless brand. Build recurring client relationships.' },
           ].map((r, i) => (
             <div key={i} className="rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 shadow-glass card-premium-hover relative pt-10">
               <div className="absolute -top-3 left-6 rounded-full bg-[#1A233A] px-3 py-1 text-[10px] font-bold text-white uppercase tracking-widest">
@@ -553,7 +553,7 @@ export default function HomePage() {
           </span>
 
           <h1 className="mx-auto mt-3 max-w-4xl text-balance font-['Sora'] text-[28px] font-bold leading-[1.15] tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl md:text-5xl">
-            Master <span className="text-gradient">AI Video Generation</span> in 10 Days — Build Skills That Pay
+            Master <span className="text-gradient">AI Video Generation</span> — Build Skills That Pay
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-balance text-sm leading-relaxed text-slate-500 sm:text-base">
@@ -758,7 +758,7 @@ export default function HomePage() {
             {[
               { stat: '$194', desc: 'Earned from Facebook bonus with AI content only — in the first month.', tag: 'Earnings' },
               { stat: '2.8M', desc: 'Views on a single AI podcast video. Faceless, no camera needed.', tag: 'Viral' },
-              { stat: 'Rs. 15,000', desc: 'First client project closed within 9 days of completing the course.', tag: 'Client Work' },
+              { stat: 'Rs. 15,000', desc: 'First client project closed shortly after completing the course.', tag: 'Client Work' },
             ].map((story, i) => (
               <div key={i} className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 shadow-glass card-premium-hover">
                 <div className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">{story.tag}</div>
