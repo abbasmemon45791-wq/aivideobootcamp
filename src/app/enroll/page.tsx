@@ -519,8 +519,17 @@ function Step3({
           : <><Upload className="h-4 w-4" /> Submit Payment Proof</>}
       </button>
 
+      <a
+        href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent("Hi! I am on Step 3 (Upload Proof) for the AI Bootcamp and I need help uploading or verifying my payment screenshot.")}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-2.5 flex items-center justify-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 py-2.5 px-4 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100/90"
+      >
+        <MessageCircle className="h-4 w-4 text-emerald-600" /> Facing issue uploading screenshot? Get help on WhatsApp
+      </a>
+
       <button onClick={onBack}
-        className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-slate-200 py-2.5 text-xs font-medium text-slate-500 hover:bg-slate-50">
+        className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-slate-200 py-2.5 text-xs font-medium text-slate-500 hover:bg-slate-50">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
 
