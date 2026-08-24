@@ -8,7 +8,7 @@ import {
   X, AlertCircle, CheckCircle, ChevronDown, MessageCircle, Star, Sparkles
 } from 'lucide-react'
 
-const COURSE_PRICE = 2900
+const COURSE_PRICE = 1999
 const EASYPAISA_NUMBER = process.env.NEXT_PUBLIC_EASYPAISA_NUMBER ?? '03458996578'
 const JAZZCASH_NUMBER  = process.env.NEXT_PUBLIC_JAZZCASH_NUMBER  ?? '03180236635'
 const HBL_ACCOUNT      = process.env.NEXT_PUBLIC_HBL_ACCOUNT      ?? '22567902223303'
@@ -303,13 +303,13 @@ function PaymentRetentionModal({
             <strong>1,120+ students</strong> already join ho chuke hain TechPulse AI Bootcamp mein — high demand aur mentor seats ki wajah se course fee <strong>PKR 7,999</strong> hone wali hai.
           </p>
           <p className="mt-2 text-xs leading-relaxed text-slate-600">
-            Aapka seat discount (<strong>PKR 2,900</strong>) temporarily reserve kar liya gaya hai. Agar aapko EasyPaisa, JazzCash, ya Bank transfer mein koi bhi masla aa raha hai, hamari team live guide karne ke liye online hai!
+            Aapka seat discount (<strong>PKR 1,999</strong>) temporarily reserve kar liya gaya hai. Agar aapko EasyPaisa, JazzCash, ya Bank transfer mein koi bhi masla aa raha hai, hamari team live guide karne ke liye online hai!
           </p>
 
           {/* Price & Bonuses Box */}
           <div className="mt-4 rounded-2xl border border-blue-200/80 bg-blue-50/40 p-4 text-center">
             <div className="flex items-center justify-center gap-3">
-              <span className="font-['Sora'] text-3xl font-extrabold text-emerald-600">PKR 2,900</span>
+              <span className="font-['Sora'] text-3xl font-extrabold text-emerald-600">PKR 1,999</span>
               <span className="text-base text-slate-400 line-through">PKR 7,999</span>
             </div>
             <div className="mt-1.5 flex items-center justify-center gap-1 text-[11px] font-bold text-blue-700">

@@ -65,8 +65,7 @@ export async function GET(req: NextRequest) {
         totalRevenue += Number(p.amount)
       } else {
         // Fallback if payment record had no custom amount
-        const isNoss = l.site === 'techpulse-noss' || l.utm_content?.includes('[site:techpulse-noss]')
-        totalRevenue += isNoss ? 1999 : 2900
+        totalRevenue += 1999
       }
     })
 

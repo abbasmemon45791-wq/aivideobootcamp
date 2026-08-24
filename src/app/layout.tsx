@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     title: 'AI Video Bootcamp Pakistan',
-    description: 'Master AI video generation and earn in USD. PKR 2,900 intro price. No experience needed.',
+    description: 'Master AI video generation and earn in USD. PKR 1,999 intro price. No experience needed.',
   },
   twitter: { card: 'summary_large_image' },
 }

@@ -13,9 +13,9 @@ const VALID_RECIPIENT_NUMBERS = [
   process.env.NEXT_PUBLIC_HBL_ACCOUNT ?? '',
 ].filter(Boolean)
 
-const COURSE_PRICE = parseInt(process.env.COURSE_PRICE ?? '2900')
-const PRICE_TOLERANCE_LOW = COURSE_PRICE - 150    // e.g. 2750
-const PRICE_TOLERANCE_HIGH = COURSE_PRICE + 500   // e.g. 3400
+const COURSE_PRICE = parseInt(process.env.COURSE_PRICE ?? '1999')
+const PRICE_TOLERANCE_LOW = COURSE_PRICE - 150    // e.g. 1849
+const PRICE_TOLERANCE_HIGH = COURSE_PRICE + 500   // e.g. 2499
 
 export async function POST(req: NextRequest) {
   try {

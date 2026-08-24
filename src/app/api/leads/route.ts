@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
                 },
                 custom_data: {
                   currency: 'PKR',
-                  value: Number(process.env.COURSE_PRICE) || 2900,
+                  value: Number(process.env.COURSE_PRICE) || 1999,
                 },
               }
             ]

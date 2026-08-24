@@ -13,7 +13,7 @@ import {
 // ── Config ────────────────────────────────────────────────────────────────
 const ENROLLED = 1127
 const TOTAL_SLOTS = 1200
-const PRICE = 2900
+const PRICE = 1999
 const ORIGINAL_PRICE = 7999
 const DISCOUNT = Math.round((1 - PRICE / ORIGINAL_PRICE) * 100)
 const SLOTS_LEFT = TOTAL_SLOTS - ENROLLED

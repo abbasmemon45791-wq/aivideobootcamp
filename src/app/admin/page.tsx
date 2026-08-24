@@ -189,7 +189,7 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
             <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
               isSite2 ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' : 'bg-purple-50 text-purple-700 border border-purple-200'
             }`}>
-              {isSite2 ? 'Site 2 (No SS / 1999)' : 'Site 1 (SS / 2900)'}
+              {isSite2 ? 'Site 2 (No SS / 1999)' : 'Site 1 (SS / 1999)'}
             </span>
           </div>
           <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-slate-500">
@@ -568,7 +568,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1">Website:</span>
               {[
                 { id: 'all', label: 'All Websites' },
-                { id: 'techpulse-replica', label: 'Site 1 (SS / Rs. 2,900)' },
+                { id: 'techpulse-replica', label: 'Site 1 (SS / Rs. 1,999)' },
                 { id: 'techpulse-noss', label: 'Site 2 (No SS / Rs. 1,999)' }
               ].map(s => (
                 <button key={s.id} onClick={() => { setSelectedSite(s.id); setPage(1) }}
