@@ -58,6 +58,8 @@ interface Lead {
   whatsapp: string
   city?: string
   source?: string
+  site?: string
+  utm_content?: string
   status: string
   created_at: string
   access_sent?: boolean
@@ -128,6 +130,8 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
   const payment = lead.payments?.[0]
   const badge = STATUS_LABEL[lead.status] ?? STATUS_LABEL.pending
 
+  const isSite2 = lead.site === 'techpulse-noss' || lead.utm_content?.includes('[site:techpulse-noss]')
+
   const act = async (action: 'approve' | 'reject') => {
     setLoading(action)
     try {
@@ -182,6 +186,11 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
             <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.color}`}>
               {badge.icon} {badge.label}
             </span>
+            <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+              isSite2 ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' : 'bg-purple-50 text-purple-700 border border-purple-200'
+            }`}>
+              {isSite2 ? 'Site 2 (No SS / 1999)' : 'Site 1 (SS / 2900)'}
+            </span>
           </div>
           <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-slate-500">
             <span className="truncate max-w-[120px] sm:max-w-none">{lead.email}</span>
@@ -196,7 +205,7 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
           </div>
           {payment && (
             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
-              {payment.amount && <span className="text-slate-700">Rs. {payment.amount.toLocaleString()}</span>}
+              {payment.amount && <span className="text-slate-900 font-bold">Paid: Rs. {payment.amount.toLocaleString()}</span>}
               {payment.recipient_number && <span className="text-slate-500">→ {payment.recipient_number}</span>}
               {payment.transaction_id && <span className="font-mono text-slate-400">{payment.transaction_id}</span>}
               {payment.ai_verified !== undefined && (
@@ -341,9 +350,11 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
 function Dashboard({ token, onLogout }: { token: string; onLogout: () => void }) {
   const [leads, setLeads]   = useState<Lead[]>([])
   const [total, setTotal]   = useState(0)
-  const [funnel, setFunnel] = useState({ registered: 0, paymentSubmitted: 0, approved: 0, rejected: 0, submitted: 0 })
+  const [funnel, setFunnel] = useState({ registered: 0, paymentSubmitted: 0, approved: 0, rejected: 0, submitted: 0, totalRevenue: 0 })
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
+  const [selectedSource, setSelectedSource] = useState('all')
+  const [selectedSite, setSelectedSite] = useState('all')
   const [search, setSearch] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -357,6 +368,8 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     if (!isSilent) setLoading(true)
     const params = new URLSearchParams({ page: String(page) })
     if (filter) params.set('status', filter)
+    if (selectedSource && selectedSource !== 'all') params.set('source', selectedSource)
+    if (selectedSite && selectedSite !== 'all') params.set('site', selectedSite)
     if (search) params.set('search', search)
     if (startDate) params.set('startDate', startDate)
     if (endDate) params.set('endDate', endDate)
@@ -371,6 +384,8 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 
       // Load Funnel Stats
       const funnelParams = new URLSearchParams()
+      if (selectedSource && selectedSource !== 'all') funnelParams.set('source', selectedSource)
+      if (selectedSite && selectedSite !== 'all') funnelParams.set('site', selectedSite)
       if (startDate) funnelParams.set('startDate', startDate)
       if (endDate) funnelParams.set('endDate', endDate)
       const funnelRes = await fetch(`/api/admin/funnel?${funnelParams}`, { headers: { 'x-admin-token': token } })
@@ -380,7 +395,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     } finally {
       setLoading(false)
     }
-  }, [token, filter, search, startDate, endDate, page, onLogout])
+  }, [token, filter, selectedSource, selectedSite, search, startDate, endDate, page, onLogout])
 
   useEffect(() => { load() }, [load])
 
@@ -433,7 +448,6 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   const approved  = funnel.approved
   const rejected  = funnel.rejected
 
-
   // Source breakdown
   const sources = leads.reduce((acc, lead) => {
     const s = lead.source || 'direct'
@@ -443,9 +457,9 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 
   const exportCSV = () => {
     const rows = [
-      ['Name', 'Email', 'WhatsApp', 'Source', 'Medium', 'Campaign', 'Content', 'Status', 'Amount', 'TX ID', 'Enrolled'],
+      ['Name', 'Email', 'WhatsApp', 'Site', 'Source', 'Medium', 'Campaign', 'Content', 'Status', 'Amount', 'TX ID', 'Enrolled'],
       ...leads.map(l => [
-        l.name, l.email, l.whatsapp, l.source ?? 'direct',
+        l.name, l.email, l.whatsapp, l.site ?? 'techpulse-replica', l.source ?? 'direct',
         (l as any).utm_medium ?? '', (l as any).utm_campaign ?? '', (l as any).utm_content ?? '',
         l.status, l.payments?.[0]?.amount ?? '', l.payments?.[0]?.transaction_id ?? '',
         new Date(l.created_at).toLocaleDateString('en-PK'),
@@ -494,7 +508,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
             { label: 'Pending Review', val: submitted, icon: <Clock className="h-5 w-5 text-amber-600" />, bg: 'bg-amber-50' },
             { label: 'Approved', val: approved, icon: <CheckCircle className="h-5 w-5 text-emerald-600" />, bg: 'bg-emerald-50' },
             { label: 'Rejected', val: rejected, icon: <XCircle className="h-5 w-5 text-red-600" />, bg: 'bg-red-50' },
-            { label: 'Revenue (est.)', val: `Rs. ${(approved * 2900).toLocaleString()}`, icon: <TrendingUp className="h-5 w-5 text-purple-600" />, bg: 'bg-purple-50' },
+            { label: 'Revenue (Actual)', val: `Rs. ${(funnel.totalRevenue ?? 0).toLocaleString()}`, icon: <TrendingUp className="h-5 w-5 text-purple-600" />, bg: 'bg-purple-50' },
           ].map((s, i) => (
             <div key={i} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${s.bg}`}>{s.icon}</div>
@@ -508,7 +522,9 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 
         {/* Funnel */}
         <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Conversion Funnel (All Time / Filtered)</div>
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            Conversion Funnel {selectedSite !== 'all' ? `[${selectedSite === 'techpulse-noss' ? 'Site 2: No SS' : 'Site 1: SS'}]` : '[All Sites]'} {selectedSource !== 'all' ? `(Source: ${selectedSource})` : ''}
+          </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="flex-1 rounded-lg bg-slate-50 p-3 text-center border border-slate-100">
               <div className="text-xl font-bold text-slate-800">{funnel.registered}</div>
@@ -529,33 +545,91 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 
         {/* Source Breakdown */}
         {Object.keys(sources).length > 0 && (
-           <div className="mt-3 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm text-xs">
-             <span className="font-semibold text-slate-500 mr-2">Top Sources (this page):</span>
+           <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm text-xs">
+             <span className="font-semibold text-slate-500 mr-2">Top Sources (page):</span>
              {Object.entries(sources).sort((a,b) => b[1] - a[1]).map(([src, count]) => (
-               <span key={src} className="capitalize bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">
+               <button
+                 key={src}
+                 onClick={() => { setSelectedSource(src); setPage(1) }}
+                 className={`capitalize px-2.5 py-1 rounded-full font-medium transition cursor-pointer border ${selectedSource === src ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}`}
+               >
                  {src}: {count}
-               </span>
+               </button>
              ))}
            </div>
         )}
 
         {/* Filters and Search */}
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            {['', 'pending', 'payment_submitted', 'approved', 'rejected'].map(f => (
-              <button key={f} onClick={() => { setFilter(f); setPage(1) }}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${filter === f ? 'text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
-                style={filter === f ? { background: 'linear-gradient(135deg,#2563eb,#06b6d4)' } : {}}>
-                {f === '' ? 'All' : STATUS_LABEL[f]?.label ?? f}
-              </button>
-            ))}
+        <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          {/* Top row: Website & Status filters */}
+          <div className="flex flex-col gap-3">
+            {/* Website Filter Pills */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1">Website:</span>
+              {[
+                { id: 'all', label: 'All Websites' },
+                { id: 'techpulse-replica', label: 'Site 1 (SS / Rs. 2,900)' },
+                { id: 'techpulse-noss', label: 'Site 2 (No SS / Rs. 1,999)' }
+              ].map(s => (
+                <button key={s.id} onClick={() => { setSelectedSite(s.id); setPage(1) }}
+                  className={`rounded-full px-3 py-1 text-xs font-bold transition ${selectedSite === s.id ? 'bg-blue-600 text-white shadow-sm' : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Status & Source Filter Pills */}
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between border-t border-slate-100 pt-2.5">
+              {/* Status Pills */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1">Status:</span>
+                {['', 'pending', 'payment_submitted', 'approved', 'rejected'].map(f => (
+                  <button key={f} onClick={() => { setFilter(f); setPage(1) }}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${filter === f ? 'text-white shadow-sm' : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                    style={filter === f ? { background: 'linear-gradient(135deg,#2563eb,#06b6d4)' } : {}}>
+                    {f === '' ? 'All' : STATUS_LABEL[f]?.label ?? f}
+                  </button>
+                ))}
+              </div>
+
+              {/* Source Filter Pills */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1">Source:</span>
+                {[
+                  { id: 'all', label: 'All' },
+                  { id: 'google', label: 'Google' },
+                  { id: 'facebook', label: 'Meta' },
+                  { id: 'tiktok', label: 'TikTok' },
+                  { id: 'youtube', label: 'YouTube' },
+                  { id: 'direct', label: 'Direct' }
+                ].map(s => (
+                  <button key={s.id} onClick={() => { setSelectedSource(s.id); setPage(1) }}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${selectedSource === s.id ? 'bg-slate-900 text-white shadow-sm' : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleSearch} className="flex flex-wrap gap-2">
-             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-blue-500" />
-             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-blue-500" />
-             <input type="text" placeholder="Search name, email, phone..." value={search} onChange={e => setSearch(e.target.value)} className="w-48 rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-blue-500" />
-             <button type="submit" className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700">Search</button>
+          {/* Bottom row: Dates & Search */}
+          <form onSubmit={handleSearch} className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+             <div className="flex flex-wrap items-center gap-2">
+               <span className="text-xs font-medium text-slate-500">Date:</span>
+               <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs outline-none focus:border-blue-500" />
+               <span className="text-xs text-slate-400">to</span>
+               <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs outline-none focus:border-blue-500" />
+               {(startDate || endDate || filter || (selectedSource !== 'all') || (selectedSite !== 'all') || search) && (
+                 <button type="button" onClick={() => { setStartDate(''); setEndDate(''); setFilter(''); setSelectedSource('all'); setSelectedSite('all'); setSearch(''); setPage(1); }} className="text-xs text-rose-600 font-semibold hover:underline ml-1">
+                   Clear All Filters
+                 </button>
+               )}
+             </div>
+
+             <div className="flex items-center gap-2">
+               <input type="text" placeholder="Search name, email, phone..." value={search} onChange={e => setSearch(e.target.value)} className="w-52 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs outline-none focus:border-blue-500" />
+               <button type="submit" className="rounded-lg bg-slate-800 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-700">Search</button>
+             </div>
           </form>
         </div>
         

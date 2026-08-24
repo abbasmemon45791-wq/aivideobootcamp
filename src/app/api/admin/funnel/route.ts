@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(req: NextRequest) {
-  const token = req.headers.get('x-admin-token')
+  const token = req.headers.get('x-admin-token') ?? req.cookies.get('admin_token')?.value
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Verify token
   const { data: session } = await supabaseAdmin
     .from('admin_sessions')
     .select('*')
@@ -24,9 +18,24 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
+    const source = searchParams.get('source')
+    const site = searchParams.get('site')
 
-    let query = supabaseAdmin.from('leads').select('status, created_at')
+    let query = supabaseAdmin
+      .from('leads')
+      .select(`
+        id, status, created_at, source, site, utm_content,
+        payments (
+          amount, admin_approved
+        )
+      `)
 
+    if (source && source !== 'all') {
+      query = query.eq('source', source)
+    }
+    if (site && site !== 'all') {
+      query = query.or(`site.eq.${site},utm_content.ilike.%[site:${site}]%`)
+    }
     if (startDate) {
       query = query.gte('created_at', new Date(startDate).toISOString())
     }
@@ -43,16 +52,31 @@ export async function GET(req: NextRequest) {
     // Calculate funnel metrics
     const registered = leads.length
     const paymentSubmitted = leads.filter(l => ['payment_submitted', 'approved', 'rejected'].includes(l.status)).length
-    const approved = leads.filter(l => l.status === 'approved').length
+    const approvedLeads = leads.filter(l => l.status === 'approved')
+    const approved = approvedLeads.length
     const rejected = leads.filter(l => l.status === 'rejected').length
     const submitted = leads.filter(l => l.status === 'payment_submitted').length
+
+    // Dynamic total revenue: sum exact amount recorded on approved payments
+    let totalRevenue = 0
+    approvedLeads.forEach(l => {
+      const p = l.payments?.[0]
+      if (p?.amount && Number(p.amount) > 0) {
+        totalRevenue += Number(p.amount)
+      } else {
+        // Fallback if payment record had no custom amount
+        const isNoss = l.site === 'techpulse-noss' || l.utm_content?.includes('[site:techpulse-noss]')
+        totalRevenue += isNoss ? 1999 : 2900
+      }
+    })
 
     return NextResponse.json({
       registered,
       paymentSubmitted,
       approved,
       rejected,
-      submitted
+      submitted,
+      totalRevenue,
     })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })

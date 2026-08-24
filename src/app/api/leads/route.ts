@@ -39,7 +39,9 @@ export async function POST(req: NextRequest) {
     const fbc = cookieHeader.match(/_fbc=([^;]+)/)?.[1]
     const fbp = cookieHeader.match(/_fbp=([^;]+)/)?.[1]
 
-    const { data, error } = await supabaseAdmin
+    const site = process.env.NEXT_PUBLIC_SITE_NAME || 'techpulse-replica'
+
+    let insertRes = await supabaseAdmin
       .from('leads')
       .insert({
         name: name.trim(),
@@ -48,6 +50,7 @@ export async function POST(req: NextRequest) {
         ip_address: ip,
         user_agent: userAgent,
         status: 'pending',
+        site: site,
         source: source || 'direct',
         utm_medium: utm_medium?.trim() || null,
         utm_campaign: utm_campaign?.trim() || null,
@@ -58,6 +61,29 @@ export async function POST(req: NextRequest) {
       .select('id')
       .single()
 
+    // If site column doesn't exist yet in Supabase, retry without site column
+    if (insertRes.error && insertRes.error.message?.includes('site')) {
+      insertRes = await supabaseAdmin
+        .from('leads')
+        .insert({
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
+          whatsapp: whatsapp.trim(),
+          ip_address: ip,
+          user_agent: userAgent,
+          status: 'pending',
+          source: source || 'direct',
+          utm_medium: utm_medium?.trim() || null,
+          utm_campaign: utm_campaign?.trim() || null,
+          utm_content: utm_content ? `${utm_content} [site:${site}]` : `[site:${site}]`,
+          gclid: gclid?.trim() || null,
+          fbclid: fbclid?.trim() || null,
+        })
+        .select('id')
+        .single()
+    }
+
+    const { data, error } = insertRes
     if (error) throw error
 
     // Send Facebook CAPI Lead Event
