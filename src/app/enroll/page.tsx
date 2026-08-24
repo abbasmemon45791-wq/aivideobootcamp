@@ -243,129 +243,13 @@ function BankRow({ bank, title, num, colorClass = "text-slate-500" }: { bank: st
   )
 }
 
-// ── Payment Retention Exit / Timer Modal ───────────────────────────────────
-function PaymentRetentionModal({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean
-  onClose: () => void
-}) {
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
-        
-        {/* Top Header Banner */}
-        <div
-          className="relative px-6 py-4 text-white"
-          style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-amber-300" />
-              <span className="font-['Sora'] text-base font-extrabold tracking-wide">
-                Seat Discount Locked!
-              </span>
-            </div>
-            <button
-              onClick={onClose}
-              className="grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white transition hover:bg-white/30"
-              aria-label="Close modal"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-5 sm:p-6 text-slate-800">
-          {/* Live Member Stats Bar */}
-          <div className="flex items-center justify-around rounded-2xl bg-slate-50 p-3 text-center border border-slate-100 shadow-inner">
-            <div>
-              <div className="font-['Sora'] text-lg font-extrabold text-blue-600">1,127</div>
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Members</div>
-            </div>
-            <div className="h-8 w-px bg-slate-200" />
-            <div>
-              <div className="font-['Sora'] text-lg font-extrabold text-emerald-600">41</div>
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Online</div>
-            </div>
-            <div className="h-8 w-px bg-slate-200" />
-            <div>
-              <div className="font-['Sora'] text-lg font-extrabold text-cyan-600">1</div>
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Admin Active</div>
-            </div>
-          </div>
-
-          {/* Copy in Roman Urdu / English */}
-          <p className="mt-4 text-xs leading-relaxed text-slate-600">
-            <strong>1,120+ students</strong> already join ho chuke hain TechPulse AI Bootcamp mein — high demand aur mentor seats ki wajah se course fee <strong>PKR 7,999</strong> hone wali hai.
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-slate-600">
-            Aapka seat discount (<strong>PKR 1,999</strong>) temporarily reserve kar liya gaya hai. Agar aapko EasyPaisa, JazzCash, ya Bank transfer mein koi bhi masla aa raha hai, hamari team live guide karne ke liye online hai!
-          </p>
-
-          {/* Price & Bonuses Box */}
-          <div className="mt-4 rounded-2xl border border-blue-200/80 bg-blue-50/40 p-4 text-center">
-            <div className="flex items-center justify-center gap-3">
-              <span className="font-['Sora'] text-3xl font-extrabold text-emerald-600">PKR 1,999</span>
-              <span className="text-base text-slate-400 line-through">PKR 7,999</span>
-            </div>
-            <div className="mt-1.5 flex items-center justify-center gap-1 text-[11px] font-bold text-blue-700">
-              <CheckCircle className="h-3.5 w-3.5 text-blue-600" /> 100% Full Refund Policy Included
-            </div>
-
-            {/* Bonuses */}
-            <div className="mt-3 text-left space-y-1.5 border-t border-blue-100 pt-3 text-[11px] text-slate-700 font-medium">
-              <div className="flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                <span><strong>Bonus 1:</strong> 500+ AI Video Prompt Formulas (Free)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                <span><strong>Bonus 2:</strong> Client Outreach & Contract Templates</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                <span><strong>Bonus 3:</strong> 1-on-1 Mentor WhatsApp Support</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Primary CTA — WhatsApp Assistance */}
-          <a
-            href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent("Hi! I am on the payment page for AI Bootcamp and need help with EasyPaisa/JazzCash transfer.")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-5 py-3.5 text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.02] hover:bg-[#20bd5a]"
-          >
-            <MessageCircle className="h-5 w-5" />
-            👉 Get Payment Assistance on WhatsApp
-          </a>
-
-          {/* Secondary CTA — Continue Transfer */}
-          <button
-            onClick={onClose}
-            className="mt-2.5 w-full rounded-xl border border-slate-200 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
-          >
-            I&apos;m Transferring EasyPaisa / JazzCash Now
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ── Step 2 — Payment ───────────────────────────────────────────────────────
 function Step2({
   onContinue,
   onBack,
-  onOpenModal,
 }: {
   onContinue: () => void
   onBack: () => void
-  onOpenModal?: () => void
 }) {
   return (
     <div>
@@ -394,15 +278,6 @@ function Step2({
           <span className="font-bold text-slate-900">4.9/5</span>
           <span className="text-slate-500">(1,120+ Enrolled)</span>
         </div>
-        {onOpenModal && (
-          <button
-            type="button"
-            onClick={onOpenModal}
-            className="flex items-center gap-1 font-semibold text-blue-700 hover:underline text-[11px]"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-blue-600" /> View Locked Bonuses
-          </button>
-        )}
       </div>
 
       {/* Payment Options */}
@@ -703,32 +578,6 @@ export default function EnrollPage() {
   const [step, setStep]   = useState(1)
   const [leadId, setLeadId] = useState<string | null>(null)
   const [userData, setUserDataState] = useState<{ email: string; whatsapp: string }>({ email: '', whatsapp: '' })
-  const [showRetentionModal, setShowRetentionModal] = useState(false)
-
-  useEffect(() => {
-    if (step === 2) {
-      const modalShown = sessionStorage.getItem('step2_retention_modal_shown')
-      if (!modalShown) {
-        const timer = setTimeout(() => {
-          setShowRetentionModal(true)
-          sessionStorage.setItem('step2_retention_modal_shown', 'true')
-        }, 8000)
-
-        const handleMouseLeave = (e: MouseEvent) => {
-          if (e.clientY <= 5) {
-            setShowRetentionModal(true)
-            sessionStorage.setItem('step2_retention_modal_shown', 'true')
-          }
-        }
-        document.addEventListener('mouseleave', handleMouseLeave)
-
-        return () => {
-          clearTimeout(timer)
-          document.removeEventListener('mouseleave', handleMouseLeave)
-        }
-      }
-    }
-  }, [step])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -819,7 +668,6 @@ export default function EnrollPage() {
               <Step2
                 onContinue={() => setStep(3)}
                 onBack={() => setStep(1)}
-                onOpenModal={() => setShowRetentionModal(true)}
               />
             )}
             {step === 3 && leadId && (
@@ -841,12 +689,6 @@ export default function EnrollPage() {
           </p>
         </div>
       </main>
-
-      {/* Retention Exit / Timer Modal on Step 2 */}
-      <PaymentRetentionModal
-        isOpen={showRetentionModal}
-        onClose={() => setShowRetentionModal(false)}
-      />
 
       {/* WhatsApp floating */}
       <a href={`https://wa.me/${WHATSAPP_SUPPORT}`} target="_blank" rel="noopener noreferrer"
