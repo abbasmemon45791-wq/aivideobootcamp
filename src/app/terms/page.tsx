@@ -124,6 +124,8 @@ export default function TermsOfService() {
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
             <Link href="/privacy" className="text-white/60 hover:text-white">Privacy Policy</Link>
             <Link href="/terms" className="text-white/60 hover:text-white">Terms of Service</Link>
+            <Link href="/refund" className="text-white/60 hover:text-white">Refund Policy</Link>
+            <Link href="/contact" className="text-white/60 hover:text-white">Contact Us</Link>
             <span className="text-white/40">© 2026 AI Bootcamp Pakistan. All rights reserved.</span>
           </div>
         </div>

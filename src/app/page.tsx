@@ -885,10 +885,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Educational Disclaimer */}
-      <div className="bg-slate-100 border-t border-slate-200 px-4 py-6 sm:px-6">
-        <p className="mx-auto max-w-4xl text-center text-[11px] leading-relaxed text-slate-400">
-          <strong className="text-slate-500">Disclaimer:</strong> AI Bootcamp Pakistan is a digital educational service. Results depend on individual effort, skill level, practice, and market conditions. We do not guarantee any specific income, earnings, or financial outcomes. See our <Link href="/terms" className="underline hover:text-slate-600">Terms of Service</Link> and <Link href="/privacy" className="underline hover:text-slate-600">Privacy Policy</Link> for details.
+      {/* Educational & Trademark Disclaimer */}
+      <div className="bg-slate-100 border-t border-slate-200 px-4 py-6 sm:px-6 space-y-2">
+        <p className="mx-auto max-w-4xl text-center text-[11px] leading-relaxed text-slate-500">
+          <strong>Educational Disclaimer:</strong> AI Bootcamp Pakistan is a digital educational training service. Results depend on individual effort, skill level, practice, and market conditions. We do not guarantee any specific income, earnings, or financial outcomes. See our <Link href="/terms" className="underline hover:text-slate-700">Terms of Service</Link>, <Link href="/privacy" className="underline hover:text-slate-700">Privacy Policy</Link>, and <Link href="/refund" className="underline hover:text-slate-700">Refund Policy</Link> for details.
+        </p>
+        <p className="mx-auto max-w-4xl text-center text-[10px] leading-relaxed text-slate-400">
+          <strong>Trademark Notice:</strong> All product names, logos, brands, and trademarks (including Midjourney, ElevenLabs, Runway, Kling, Suno, CapCut) are property of their respective owners. AI Bootcamp Pakistan is an independent educational program and is not affiliated with, endorsed by, or sponsored by these entities.
         </p>
       </div>
 
@@ -907,7 +910,8 @@ export default function HomePage() {
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
             <Link href="/privacy" className="text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="text-white/60 hover:text-white transition-colors">Terms of Service</Link>
-            <Link href="/terms" className="text-white/60 hover:text-white transition-colors">Refund Policy</Link>
+            <Link href="/refund" className="text-white/60 hover:text-white transition-colors">Refund Policy</Link>
+            <Link href="/contact" className="text-white/60 hover:text-white transition-colors">Contact Us</Link>
             <a href="https://instagram.com/aivideobootcamppk" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors">Instagram</a>
             <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors">WhatsApp</a>
           </div>
