@@ -34,7 +34,7 @@ export default function PrivacyPolicy() {
 
           <h2>1. Who We Are</h2>
           <p>
-            AI Bootcamp Pakistan (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is an online education platform teaching practical AI creative skills to students in Pakistan and globally. Our website is hosted on Vercel. We are operated by an individual business and can be reached via WhatsApp at <a href="https://wa.me/923194448530" className="text-blue-600 hover:underline">+92 319 4448530</a>.
+            AI Bootcamp Pakistan (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is an online education platform teaching practical AI creative skills to students in Pakistan and globally. Our website is hosted on Vercel. We are operated by an individual business and can be reached via email at <a href="mailto:aivideoboootcamp@gmail.com" className="text-blue-600 hover:underline">aivideoboootcamp@gmail.com</a> or via WhatsApp at <a href="https://wa.me/923194448530" className="text-blue-600 hover:underline">+92 319 4448530</a>.
           </p>
 
           <h2>2. Information We Collect</h2>

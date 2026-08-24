@@ -680,7 +680,7 @@ export default function EnrollPage() {
         <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
           <div className="font-semibold text-slate-800">Questions?</div>
           <p className="mt-1 text-xs">
-            WhatsApp us at{' '}
+            Email us at <a href="mailto:aivideoboootcamp@gmail.com" className="font-semibold text-blue-600 hover:underline">aivideoboootcamp@gmail.com</a>, WhatsApp us at{' '}
             <a href={`https://wa.me/${WHATSAPP_SUPPORT}`} target="_blank" rel="noopener noreferrer"
               className="font-semibold text-blue-600 hover:underline">
               +{WHATSAPP_SUPPORT}

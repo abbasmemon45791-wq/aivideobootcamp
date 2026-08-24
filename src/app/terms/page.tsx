@@ -109,6 +109,7 @@ export default function TermsOfService() {
           <h2>12. Contact Us</h2>
           <p>If you have any questions about these Terms of Service, please contact us:</p>
           <ul className="list-disc pl-6 space-y-1">
+            <li>Email: <a href="mailto:aivideoboootcamp@gmail.com" className="text-blue-600 hover:underline">aivideoboootcamp@gmail.com</a></li>
             <li>WhatsApp: <a href="https://wa.me/923194448530" className="text-blue-600 hover:underline">+92 319 4448530</a></li>
           </ul>
         </div>

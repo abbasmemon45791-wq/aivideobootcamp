@@ -11,13 +11,10 @@ import {
 } from 'lucide-react'
 
 // ── Config ────────────────────────────────────────────────────────────────
-const ENROLLED = 1127
-const TOTAL_SLOTS = 1200
+const ENROLLED = 1057
 const PRICE = 1999
-const ORIGINAL_PRICE = 7999
-const DISCOUNT = Math.round((1 - PRICE / ORIGINAL_PRICE) * 100)
-const SLOTS_LEFT = TOTAL_SLOTS - ENROLLED
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '923194448530'
+const SUPPORT_EMAIL = 'aivideoboootcamp@gmail.com'
 const YOUTUBE_EMBED = 'https://www.youtube.com/embed/oxlf7CQxPP4?rel=0&modestbranding=1&playsinline=1'
 
 const MODULES = [
@@ -28,16 +25,16 @@ const MODULES = [
   { num: '05', title: 'AI Voice & Audio — Bina Mic Ke Studio Quality', desc: 'ElevenLabs, Suno, aur free tools — bina mic aur studio ke professional voiceovers aur music generate karo.' },
   { num: '06', title: 'AI Video Generation — Lights, Camera, No Crew Needed', desc: 'Kling, Runway, Pika — text se high-quality cinematic videos banao. Aaj ki sab se high-demand creative skill.' },
   { num: '07', title: 'Editing & Final Ad Assembly — Jahan Raw Becomes Ready', desc: 'CapCut Pro workflows, auto-subtitles, color grading, aur har platform ke liye perfect export settings.' },
-  { num: '08', title: 'AI Influencer & Faceless Content — Bina Chehra Dikhaye Famous Ho Jao', desc: 'Bina chehra dikhaye apna brand banao, page monetize karo, aur aisi automated content chalao jo continuous earning de.' },
-  { num: '09', title: 'Clients Lao, Paise Kamao — Skill Ko Business Banao', desc: 'Cold outreach scripts, pricing strategies, contracts, aur pehla client close karne ki proven technique.' },
+  { num: '08', title: 'Faceless AI Content Creation — Audience Building', desc: 'Bina chehra dikhaye apna brand banao, high-engagement reels aur videos publish karo, aur automated workflows se audience build karo.' },
+  { num: '09', title: 'Finding Clients & Freelancing — Portfolio to Projects', desc: 'Cold outreach scripts, portfolio presentation, pricing strategies, proposals, aur freelance projects manage karne ki proven techniques.' },
   { num: '10', title: 'Koi Bhi Viral Video Dekho — Wohi Banao', desc: 'Kisi bhi viral video ko AI se reverse-engineer karo aur exact waise hi high-performing viral content banao.' },
 ]
 
 const REVIEWS = [
-  { name: 'Ali Hassan', city: 'Lahore', tag: 'Client Work', text: 'Pehla AI ad order close kiya! Training ke foran baad. Course ne sab seekha diya.' },
-  { name: 'Fatima Raza', city: 'Karachi', tag: 'Content Creator', text: 'Facebook bonus program se earnings aane lagi sirf AI content se. Yeh course alag hi level ka hai.' },
+  { name: 'Ali Hassan', city: 'Lahore', tag: 'Client Work', text: 'Pehla AI ad campaign successfully deliver kiya! Training ke foran baad. Course ne sab practical seekha diya.' },
+  { name: 'Fatima Raza', city: 'Karachi', tag: 'Content Creator', text: 'AI product photography aur faceless reels banana itna aasan ho gaya. Training ne workflow ko 10x fast kar diya.' },
   { name: 'Usman Malik', city: 'Islamabad', tag: 'Views', text: '2.8 million views ek video pe! AI podcast content ka koi jawab nahi.' },
-  { name: 'Ayesha Khan', city: 'Rawalpindi', tag: 'Freelancing', text: 'Upwork pe pehla project close kiya. Module 9 ne game change kar diya.' },
+  { name: 'Ayesha Khan', city: 'Rawalpindi', tag: 'Freelancing', text: 'Upwork pe pehla AI design project complete kiya. Module 9 ne game change kar diya.' },
   { name: 'Hassan Javed', city: 'Faisalabad', tag: 'Faceless Page', text: 'Facebook page 0 se 50k followers tak 6 hafton mein. Organic growth ka kamaal.' },
   { name: 'Zainab Noor', city: 'Multan', tag: 'Skill', text: 'Prompt engineering wala module alone worth tha pure course ka price.' },
 ]
@@ -186,25 +183,25 @@ function WhatsAppTestimonials() {
             isMe: false,
             time: '4:13 PM',
             image: (
-              <div className="flex h-48 w-full flex-col items-center justify-center bg-white text-slate-800 p-2">
-                <div className="text-[10px] font-bold text-slate-400 w-full text-left">Earnings</div>
-                <div className="text-2xl font-bold mt-2">$194.02</div>
-                <div className="text-[10px] text-emerald-500 font-semibold mt-1">↑ 100% from previous 28 days</div>
-                <div className="mt-4 flex w-full justify-between text-[10px]">
-                  <span>Extra bonus</span>
-                  <span className="font-bold">$190.00</span>
+              <div className="flex h-48 w-full flex-col items-center justify-center bg-slate-900 text-white p-3">
+                <div className="text-[10px] font-semibold text-emerald-400 w-full text-left">✓ Asset Delivered</div>
+                <div className="text-sm font-bold mt-2 text-center text-slate-100">AI Product Ad Campaign</div>
+                <div className="text-[10px] text-slate-400 mt-1">4K Resolution · Studio Lighting</div>
+                <div className="mt-4 flex w-full justify-between text-[10px] bg-slate-800/80 rounded p-2">
+                  <span>Status</span>
+                  <span className="font-bold text-emerald-400">Client Approved</span>
                 </div>
-                <div className="mt-1 flex w-full justify-between text-[10px]">
-                  <span>Reels</span>
-                  <span className="font-bold">$4.02</span>
+                <div className="mt-1 flex w-full justify-between text-[10px] bg-slate-800/80 rounded p-2">
+                  <span>Format</span>
+                  <span className="font-bold text-cyan-400">9:16 Video + Stills</span>
                 </div>
               </div>
             ),
-            text: 'Extra bonus se hee 194$ ban gye is month🤗'
+            text: 'Pehla AI brand ad campaign successfully complete kar ke deliver kar diya! Client ko visuals bohot pasand aye 🤗'
           },
-          { isMe: false, time: '4:13 PM', text: 'Trending videos wale lecture se easily bana paya is page ko' },
-          { isMe: false, time: '4:16 PM', text: 'And I implemented just 10% of what you sir taught in the training' },
-          { isMe: true, time: '4:16 PM', text: 'MashAllah' }
+          { isMe: false, time: '4:13 PM', text: 'Product lighting aur prompt engineering wale module se exact brand-level output aya.' },
+          { isMe: false, time: '4:16 PM', text: 'Training was 100% practical and to the point.' },
+          { isMe: true, time: '4:16 PM', text: 'MashAllah! Keep it up.' }
         ]}
       />
 
@@ -328,15 +325,15 @@ function IncomeAndRoadmap() {
             Bootcamp Roadmap
           </div>
           <h2 className="mt-4 font-['Sora'] text-3xl font-bold tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl">
-            From zero to first paycheck
+            From zero to professional creator
           </h2>
         </div>
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { day: 'PHASE 1', step: '01', title: 'Foundations', desc: 'Master the AI stack — prompts, tools, workflows.' },
-            { day: 'PHASE 2', step: '02', title: 'First Asset', desc: 'Ship your first paid AI ad. Build your portfolio.' },
-            { day: 'PHASE 3', step: '03', title: 'First Client', desc: 'Outreach scripts + DMs. Sign your first paying brand.' },
-            { day: 'PHASE 4', step: '04', title: 'Scale', desc: 'Retainer + faceless brand. Build recurring client relationships.' },
+            { day: 'PHASE 2', step: '02', title: 'First Asset', desc: 'Generate your first 4K AI ad. Build your portfolio.' },
+            { day: 'PHASE 3', step: '03', title: 'First Project', desc: 'Outreach templates + proposals. Connect with brands.' },
+            { day: 'PHASE 4', step: '04', title: 'Scale Skills', desc: 'Deliver recurring creative sets and manage client assets.' },
           ].map((r, i) => (
             <div key={i} className="rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 shadow-glass card-premium-hover relative pt-10">
               <div className="absolute -top-3 left-6 rounded-full bg-[#1A233A] px-3 py-1 text-[10px] font-bold text-white uppercase tracking-widest">
@@ -435,11 +432,11 @@ function SkoolTestimonials() {
 // ── Who Is This For ────────────────────────────────────────────────────────
 const AUDIENCES = [
   { icon: <Sparkles className="h-5 w-5 text-white" />, title: 'Beginner', desc: 'Zero experience? Start here. Roman Urdu friendly.' },
-  { icon: <Briefcase className="h-5 w-5 text-white" />, title: 'Freelancer', desc: 'Add AI to your stack and 3x your rates.' },
+  { icon: <Briefcase className="h-5 w-5 text-white" />, title: 'Freelancer', desc: 'Add AI tools to your stack and offer creative services.' },
   { icon: <Users className="h-5 w-5 text-white" />, title: 'Business Owner', desc: 'Cut creative costs and ship ads in-house.' },
-  { icon: <DollarSign className="h-5 w-5 text-white" />, title: 'Dollar Earner', desc: 'International clients with Wise/Payoneer payouts.' },
-  { icon: <GraduationCap className="h-5 w-5 text-white" />, title: 'Student', desc: 'Side income while you study. Mobile-friendly.' },
-  { icon: <Rocket className="h-5 w-5 text-white" />, title: 'Creator', desc: 'Build a faceless brand that scales globally.' },
+  { icon: <DollarSign className="h-5 w-5 text-white" />, title: 'Global Creator', desc: 'Build digital assets for international brands.' },
+  { icon: <GraduationCap className="h-5 w-5 text-white" />, title: 'Student', desc: 'Learn in-demand AI creative skills at your own pace.' },
+  { icon: <Rocket className="h-5 w-5 text-white" />, title: 'Creator', desc: 'Build a faceless brand with automated workflows.' },
 ]
 
 function WhoIsThisFor() {
@@ -528,10 +525,10 @@ export default function HomePage() {
             </div>
           </a>
 
-          <div className="hidden items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700 md:flex">
-            <Flame className="h-3.5 w-3.5" />
-            <span className="animate-pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-orange-500" />
-            {ENROLLED} slots filled
+          <div className="hidden items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 md:flex">
+            <GraduationCap className="h-3.5 w-3.5" />
+            <span className="animate-pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-blue-500" />
+            {ENROLLED}+ Students Enrolled
           </div>
 
           <Link
@@ -547,17 +544,16 @@ export default function HomePage() {
       <section id="top" className="hero-bg relative overflow-hidden dot-grid">
         <div className="mx-auto max-w-6xl px-4 pb-6 pt-8 text-center sm:px-6 sm:pb-8 sm:pt-12 md:pt-10">
 
-
           <span className="inline-flex items-center gap-2 rounded-full border border-blue-200/60 bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-blue-700 shadow-sm backdrop-blur sm:text-xs">
-            🇵🇰 Pakistan&apos;s #1 AI Creative Training
+            🎓 Structured AI Skills Course · 10 Modules
           </span>
 
           <h1 className="mx-auto mt-3 max-w-4xl text-balance font-['Sora'] text-[28px] font-bold leading-[1.15] tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl md:text-5xl">
-            Master <span className="text-gradient">AI Video Generation</span> — Build Skills That Pay
+            Learn <span className="text-gradient">AI Content Creation</span> — From Zero to Professional
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-balance text-sm leading-relaxed text-slate-500 sm:text-base">
-            Learn faceless YouTube automation, AI ad creation, and client acquisition strategies. No prior experience or expensive PC required. A practical, results-oriented training built for Pakistan.
+            A structured 10-module course teaching you to create professional AI images, product photography, videos, and talking ads. No prior experience or expensive equipment needed.
           </p>
 
           {/* <div className="mt-2 flex justify-center">
@@ -656,11 +652,11 @@ export default function HomePage() {
       <div className="gradient-brand overflow-hidden border-y border-blue-400/30 py-3 text-white">
         <div className="flex w-max animate-marquee gap-10 whitespace-nowrap text-sm font-semibold">
           {[...Array(3)].flatMap(() => [
-            `✦ Intro Price Rs. ${PRICE.toLocaleString()}`,
-            `✦ ${SLOTS_LEFT} Slots Left`,
-            `✦ ${ENROLLED} Students Enrolled`,
-            '✦ Price Increasing Soon',
-            '✦ Free Bonus Tools Included',
+            `✦ Rs. ${PRICE.toLocaleString()} One-Time Payment`,
+            `✦ ${ENROLLED}+ Students Enrolled`,
+            '✦ 10 Complete Video Modules',
+            '✦ Lifetime Access Included',
+            '✦ Free Bonus Tools & Templates',
             '✦ 4-Module Refund Policy',
           ]).map((item, i) => (
             <span key={i} className="inline-flex items-center gap-3">
@@ -676,44 +672,33 @@ export default function HomePage() {
           <div className="relative overflow-hidden rounded-3xl border border-blue-200/60 bg-white p-8 shadow-glow sm:p-12">
             <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-600/10 blur-3xl" />
             <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
-            <div className="relative">
-              <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-orange-700">
-                <Flame className="h-3.5 w-3.5" /> Launch Offer — Ends Soon
+            <div className="relative text-center sm:text-left">
+              <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-700">
+                <GraduationCap className="h-3.5 w-3.5" /> Full Course Enrollment
               </div>
 
-              <div className="mt-5 flex items-end gap-3">
+              <div className="mt-5 flex flex-col sm:flex-row sm:items-baseline gap-2">
                 <div className="font-['Sora'] text-5xl font-extrabold tracking-tight text-slate-900 sm:text-6xl">
                   Rs. {PRICE.toLocaleString()}
                 </div>
-                <div className="pb-2">
-                  <div className="text-sm font-medium text-slate-400 line-through">Rs. {ORIGINAL_PRICE.toLocaleString()}</div>
-                  <div className="text-sm font-bold text-emerald-600">{DISCOUNT}% OFF</div>
+                <div className="text-sm font-semibold text-slate-500">
+                  One-time payment · No hidden fees · Lifetime access
                 </div>
               </div>
 
-              {/* Slots progress */}
-              <div className="mt-6">
-                <div className="mb-2 flex items-center justify-between text-sm font-medium">
-                  <span className="text-slate-700">{ENROLLED} enrolled</span>
-                  <span className="text-slate-400">{SLOTS_LEFT} slots left</span>
-                </div>
-                <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className="gradient-brand h-full rounded-full transition-all"
-                    style={{ width: `${(ENROLLED / TOTAL_SLOTS) * 100}%` }}
-                  />
-                </div>
-              </div>
+              <p className="mt-3 text-xs leading-relaxed text-slate-500 max-w-xl">
+                Join {ENROLLED}+ students in Pakistan mastering practical AI content creation, product photography, video production, and client workflows.
+              </p>
 
               <Link
                 href="/enroll"
                 className="btn-premium mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white"
               >
-                Secure Your Seat Now <ArrowRight className="h-5 w-5" />
+                Enroll Now — Rs. {PRICE.toLocaleString()} <ArrowRight className="h-5 w-5" />
               </Link>
 
               <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-500">
-                <Lock className="h-3.5 w-3.5" /> Secure · One-time payment · Lifetime access
+                <Lock className="h-3.5 w-3.5 text-blue-600" /> Secure checkout · 100% Refund Policy Included
               </p>
 
               {/* What's included */}
@@ -748,21 +733,24 @@ export default function HomePage() {
         <div className="mx-auto max-w-5xl">
           <div className="mx-auto max-w-3xl text-center">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
-              Success Stories
+              Student Showcase
             </div>
             <h2 className="mt-3 font-['Sora'] text-3xl font-bold tracking-tight md:-tracking-[0.02em] text-slate-900 sm:text-4xl">
-              Our Previous Batch Results
+              Real Work Created by Students
             </h2>
+            <p className="mt-2 text-sm text-slate-500 sm:text-base">
+              Practical output examples created using the AI workflows taught inside the curriculum.
+            </p>
           </div>
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { stat: '$194', desc: 'Earned from Facebook bonus with AI content only — in the first month.', tag: 'Earnings' },
-              { stat: '2.8M', desc: 'Views on a single AI podcast video. Faceless, no camera needed.', tag: 'Viral' },
-              { stat: 'Rs. 15,000', desc: 'First client project closed shortly after completing the course.', tag: 'Client Work' },
+              { stat: '4K Studio', desc: 'Commercial product photography created with matched lighting & shadows.', tag: 'AI Product Shoot' },
+              { stat: '2.8M Views', desc: 'Organic reach on a single AI podcast video with custom voiceovers.', tag: 'Content Reach' },
+              { stat: 'Client-Ready', desc: 'Brand-ready video ads and portfolio assets delivered for live campaigns.', tag: 'Client Projects' },
             ].map((story, i) => (
               <div key={i} className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-6 shadow-glass card-premium-hover">
                 <div className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">{story.tag}</div>
-                <div className="mt-3 font-['Sora'] text-3xl font-extrabold text-gradient">{story.stat}</div>
+                <div className="mt-3 font-['Sora'] text-2xl font-extrabold text-gradient">{story.stat}</div>
                 <p className="mt-2 text-sm leading-relaxed text-slate-500">{story.desc}</p>
               </div>
             ))}
@@ -782,7 +770,7 @@ export default function HomePage() {
               10 Modules. Zero Fluff.
             </h2>
             <p className="mt-2 text-sm text-slate-500 sm:text-base">
-              Every module is designed to get you earning. No theory for theory&apos;s sake.
+              Every module is designed to build practical, portfolio-ready skills. No theory for theory&apos;s sake.
             </p>
           </div>
           <div className="mt-10">
@@ -868,7 +856,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-4xl text-center">
           <Clock className="mx-auto h-8 w-8 mb-6 text-cyan-400" />
           <h2 className="font-['Sora'] text-3xl font-bold leading-tight sm:text-5xl">
-            Every day you wait is a day <span className="text-blue-400">someone else</span> takes your client.
+            Start building practical <span className="text-blue-400">AI skills</span> today.
           </h2>
           <Link
             href="/enroll"
@@ -886,7 +874,7 @@ export default function HomePage() {
             Start <span className="text-blue-500">today.</span>
           </h2>
           <p className="mt-4 text-sm text-slate-500 sm:text-base max-w-md mx-auto">
-            Rs. {PRICE.toLocaleString()} today. Lifetime access. Money-back guarantee — see our <Link href="/terms" className="underline hover:text-blue-400">refund policy</Link>.
+            Rs. {PRICE.toLocaleString()} one-time. Lifetime access. Money-back guarantee — see our <Link href="/terms" className="underline hover:text-blue-400">refund policy</Link>.
           </p>
           <Link
             href="/enroll"
@@ -897,10 +885,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Earnings Disclaimer */}
+      {/* Educational Disclaimer */}
       <div className="bg-slate-100 border-t border-slate-200 px-4 py-6 sm:px-6">
         <p className="mx-auto max-w-4xl text-center text-[11px] leading-relaxed text-slate-400">
-          <strong className="text-slate-500">Disclaimer:</strong> AI Bootcamp Pakistan is an educational service. We do not guarantee any specific income or financial results. Income examples and testimonials represent individual student experiences and are not typical. Your results will vary based on effort, skills, experience, and market conditions. See our <Link href="/terms" className="underline hover:text-slate-600">Terms of Service</Link> for full details.
+          <strong className="text-slate-500">Disclaimer:</strong> AI Bootcamp Pakistan is a digital educational service. Results depend on individual effort, skill level, practice, and market conditions. We do not guarantee any specific income, earnings, or financial outcomes. See our <Link href="/terms" className="underline hover:text-slate-600">Terms of Service</Link> and <Link href="/privacy" className="underline hover:text-slate-600">Privacy Policy</Link> for details.
         </p>
       </div>
 
@@ -909,11 +897,17 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 text-center sm:flex-row sm:text-left">
           <div className="flex items-center gap-3">
             <div className="grid h-9 w-9 place-items-center rounded-xl gradient-brand text-white font-bold text-sm">AI</div>
-            <div className="font-['Sora'] text-sm font-bold text-white">AI Bootcamp Pakistan</div>
+            <div>
+              <div className="font-['Sora'] text-sm font-bold text-white">AI Bootcamp Pakistan</div>
+              <div className="text-[11px] text-white/50">
+                Contact: <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-400 hover:underline">{SUPPORT_EMAIL}</a>
+              </div>
+            </div>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
             <Link href="/privacy" className="text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="text-white/60 hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/terms" className="text-white/60 hover:text-white transition-colors">Refund Policy</Link>
             <a href="https://instagram.com/aivideobootcamppk" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors">Instagram</a>
             <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors">WhatsApp</a>
           </div>
