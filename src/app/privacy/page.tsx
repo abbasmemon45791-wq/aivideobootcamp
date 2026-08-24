@@ -34,7 +34,7 @@ export default function PrivacyPolicy() {
 
           <h2>1. Who We Are</h2>
           <p>
-            AI Bootcamp Pakistan (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is an online education platform teaching practical AI creative skills to students in Pakistan and globally. Our website is hosted on Vercel. We are operated by an individual business and can be reached via email at <a href="mailto:aivideoboootcamp@gmail.com" className="text-blue-600 hover:underline">aivideoboootcamp@gmail.com</a> or via WhatsApp at <a href="https://wa.me/923194448530" className="text-blue-600 hover:underline">+92 319 4448530</a>.
+            AI Bootcamp Pakistan (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is an online education platform teaching practical AI creative skills to students in Pakistan and globally. Our website is hosted on Vercel. We are operated by an individual business and can be reached via email at <a href="mailto:aivideoboootcamp@gmail.com" className="text-blue-600 hover:underline">aivideoboootcamp@gmail.com</a> or via WhatsApp at <a href="https://wa.me/923180298090" className="text-blue-600 hover:underline">+92 318 0298090</a>.
           </p>
 
           <h2>2. Information We Collect</h2>
@@ -98,7 +98,7 @@ export default function PrivacyPolicy() {
             <li><strong>Opt-out of ads:</strong> Use the Google and Meta opt-out links provided in sections 4 and 5 above</li>
             <li><strong>Cookie control:</strong> Adjust your browser settings to block or delete cookies</li>
           </ul>
-          <p>To exercise these rights, contact us via WhatsApp at <a href="https://wa.me/923194448530" className="text-blue-600 hover:underline">+92 319 4448530</a>.</p>
+          <p>To exercise these rights, contact us via WhatsApp at <a href="https://wa.me/923180298090" className="text-blue-600 hover:underline">+92 318 0298090</a>.</p>
 
           <h2>10. Children&apos;s Privacy</h2>
           <p>Our services are not directed to children under 18. We do not knowingly collect personal information from minors. If you believe a minor has submitted data to us, please contact us immediately.</p>
@@ -109,7 +109,7 @@ export default function PrivacyPolicy() {
           <h2>12. Contact Us</h2>
           <p>If you have any questions about this Privacy Policy or how we handle your data, please contact us:</p>
           <ul className="list-disc pl-6 space-y-1">
-            <li>WhatsApp: <a href="https://wa.me/923194448530" className="text-blue-600 hover:underline">+92 319 4448530</a></li>
+            <li>WhatsApp: <a href="https://wa.me/923180298090" className="text-blue-600 hover:underline">+92 318 0298090</a></li>
           </ul>
         </div>
       </main>

@@ -7,7 +7,7 @@ export const metadata = {
 }
 
 export default function ContactPage() {
-  const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '923194448530'
+  const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '923180298090'
   const SUPPORT_EMAIL = 'aivideoboootcamp@gmail.com'
 
   return (

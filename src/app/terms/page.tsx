@@ -68,7 +68,7 @@ export default function TermsOfService() {
           <ul className="list-disc pl-6 space-y-1">
             <li>If after watching the first 4 modules you do not find value in the course, you may request a full refund</li>
             <li>Refund requests must be made within the eligible refund window after enrollment</li>
-            <li>To request a refund, contact us via WhatsApp at <a href="https://wa.me/923194448530" className="text-blue-600 hover:underline">+92 319 4448530</a></li>
+            <li>To request a refund, contact us via WhatsApp at <a href="https://wa.me/923180298090" className="text-blue-600 hover:underline">+92 318 0298090</a></li>
             <li>Refunds will be processed within 7–10 business days via the same payment method used for enrollment</li>
             <li>No refunds will be issued after the eligible refund period or after accessing more than 50% of the course content</li>
           </ul>
@@ -110,7 +110,7 @@ export default function TermsOfService() {
           <p>If you have any questions about these Terms of Service, please contact us:</p>
           <ul className="list-disc pl-6 space-y-1">
             <li>Email: <a href="mailto:aivideoboootcamp@gmail.com" className="text-blue-600 hover:underline">aivideoboootcamp@gmail.com</a></li>
-            <li>WhatsApp: <a href="https://wa.me/923194448530" className="text-blue-600 hover:underline">+92 319 4448530</a></li>
+            <li>WhatsApp: <a href="https://wa.me/923180298090" className="text-blue-600 hover:underline">+92 318 0298090</a></li>
           </ul>
         </div>
       </main>

@@ -13,7 +13,7 @@ import {
 // ── Config ────────────────────────────────────────────────────────────────
 const ENROLLED = 1057
 const PRICE = 1999
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '923194448530'
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '923180298090'
 const SUPPORT_EMAIL = 'aivideoboootcamp@gmail.com'
 const YOUTUBE_EMBED = 'https://www.youtube.com/embed/oxlf7CQxPP4?rel=0&modestbranding=1&playsinline=1'
 
