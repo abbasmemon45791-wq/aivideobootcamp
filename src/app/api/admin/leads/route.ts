@@ -121,8 +121,18 @@ export async function POST(req: NextRequest) {
   // ── Fire conversion events only on APPROVE ────────────────────────────────
   if (action === 'approve' && lead) {
     const transactionId = `lead_${leadId}_${Date.now()}`
-    const isNoss = lead.site === 'techpulse-noss' || lead.utm_content?.includes('[site:techpulse-noss]')
-    const coursePrice = isNoss ? 1999 : (Number(process.env.COURSE_PRICE) || 2900)
+    
+    // Determine exact price from payment record or site origin
+    let coursePrice = 2900
+    if (paymentId) {
+      const { data: p } = await supabaseAdmin.from('payments').select('amount').eq('id', paymentId).maybeSingle()
+      if (p?.amount && Number(p.amount) > 0) {
+        coursePrice = Number(p.amount)
+      }
+    } else {
+      const isNoss = lead.site === 'techpulse-noss' || lead.utm_content?.includes('[site:techpulse-noss]')
+      coursePrice = isNoss ? 1999 : (Number(process.env.COURSE_PRICE) || 2900)
+    }
 
     // ── 1. GA4 Measurement Protocol (server-side) ─────────────────────────
     try {
