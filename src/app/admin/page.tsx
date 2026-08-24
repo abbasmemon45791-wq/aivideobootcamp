@@ -341,7 +341,7 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
 function Dashboard({ token, onLogout }: { token: string; onLogout: () => void }) {
   const [leads, setLeads]   = useState<Lead[]>([])
   const [total, setTotal]   = useState(0)
-  const [funnel, setFunnel] = useState({ registered: 0, paymentSubmitted: 0, approved: 0 })
+  const [funnel, setFunnel] = useState({ registered: 0, paymentSubmitted: 0, approved: 0, rejected: 0, submitted: 0 })
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
   const [search, setSearch] = useState('')
@@ -428,10 +428,10 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     load()
   }
 
-  // Stats
-  const submitted  = leads.filter(l => l.status === 'payment_submitted').length
-  const approved   = leads.filter(l => l.status === 'approved').length
-  const rejected   = leads.filter(l => l.status === 'rejected').length
+  // Stats — sourced from the funnel API (global DB counts, not the current page slice)
+  const submitted = funnel.submitted
+  const approved  = funnel.approved
+  const rejected  = funnel.rejected
 
 
   // Source breakdown

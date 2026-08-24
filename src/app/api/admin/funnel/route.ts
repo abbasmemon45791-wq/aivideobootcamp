@@ -44,11 +44,15 @@ export async function GET(req: NextRequest) {
     const registered = leads.length
     const paymentSubmitted = leads.filter(l => ['payment_submitted', 'approved', 'rejected'].includes(l.status)).length
     const approved = leads.filter(l => l.status === 'approved').length
+    const rejected = leads.filter(l => l.status === 'rejected').length
+    const submitted = leads.filter(l => l.status === 'payment_submitted').length
 
     return NextResponse.json({
       registered,
       paymentSubmitted,
-      approved
+      approved,
+      rejected,
+      submitted
     })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
