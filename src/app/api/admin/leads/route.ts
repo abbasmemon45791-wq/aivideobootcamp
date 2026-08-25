@@ -105,8 +105,26 @@ export async function POST(req: NextRequest) {
     .update({ status: newLeadStatus })
     .eq('id', leadId)
 
-  // Update payment record if paymentId provided
-  if (paymentId) {
+  // Update or create payment record
+  let currentPaymentId = paymentId
+  if (!currentPaymentId) {
+    const { data: existingPayment } = await supabaseAdmin
+      .from('payments')
+      .select('id')
+      .eq('lead_id', leadId)
+      .maybeSingle()
+
+    if (existingPayment) {
+      currentPaymentId = existingPayment.id
+    }
+  }
+
+  let coursePrice = 1999
+  if (currentPaymentId) {
+    const { data: p } = await supabaseAdmin.from('payments').select('amount').eq('id', currentPaymentId).maybeSingle()
+    if (p?.amount && Number(p.amount) > 0) {
+      coursePrice = Number(p.amount)
+    }
     await supabaseAdmin
       .from('payments')
       .update({
@@ -115,23 +133,25 @@ export async function POST(req: NextRequest) {
         approved_at: new Date().toISOString(),
         approved_by: 'admin',
       })
-      .eq('id', paymentId)
+      .eq('id', currentPaymentId)
+  } else if (action === 'approve') {
+    coursePrice = Number(process.env.COURSE_PRICE) || 1999
+    await supabaseAdmin
+      .from('payments')
+      .insert({
+        lead_id: leadId,
+        amount: coursePrice,
+        admin_approved: true,
+        admin_note: note,
+        approved_at: new Date().toISOString(),
+        approved_by: 'admin',
+        ai_verified: false,
+      })
   }
 
   // ── Fire conversion events only on APPROVE ────────────────────────────────
   if (action === 'approve' && lead) {
     const transactionId = `lead_${leadId}_${Date.now()}`
-    
-    // Determine exact price from payment record or site origin
-    let coursePrice = 1999
-    if (paymentId) {
-      const { data: p } = await supabaseAdmin.from('payments').select('amount').eq('id', paymentId).maybeSingle()
-      if (p?.amount && Number(p.amount) > 0) {
-        coursePrice = Number(p.amount)
-      }
-    } else {
-      coursePrice = Number(process.env.COURSE_PRICE) || 1999
-    }
 
     // ── 1. GA4 Measurement Protocol (server-side) ─────────────────────────
     try {

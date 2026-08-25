@@ -225,18 +225,20 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
               <Eye className="h-3.5 w-3.5" /> Screenshot
             </a>
           )}
-          {lead.status === 'payment_submitted' && (
+          {lead.status !== 'approved' && (
             <>
               <button onClick={() => act('approve')} disabled={!!loading}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60">
                 {loading === 'approve' ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
                 Approve
               </button>
-              <button onClick={() => act('reject')} disabled={!!loading}
-                className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60">
-                {loading === 'reject' ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
-                Reject
-              </button>
+              {lead.status !== 'rejected' && (
+                <button onClick={() => act('reject')} disabled={!!loading}
+                  className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-60">
+                  {loading === 'reject' ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
+                  Reject
+                </button>
+              )}
             </>
           )}
           {lead.status === 'approved' && (
@@ -331,8 +333,8 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
              </div>
           </div>
 
-          {/* Note field for rejection */}
-          {lead.status === 'payment_submitted' && (
+          {/* Note field for rejection/approval */}
+          {lead.status !== 'approved' && (
             <div className="mt-3">
               <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Admin Note (optional)</label>
               <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
