@@ -172,6 +172,7 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
   }
 
   const uaInfo = parseUA(lead.user_agent)
+  const showApproveButtons = isSite2 ? lead.status !== 'approved' : lead.status === 'payment_submitted'
 
   return (
     <div className={`overflow-hidden rounded-xl border transition shadow-sm hover:shadow-md ${isSelected ? 'border-blue-400 bg-blue-50/30' : 'border-slate-200 bg-white'}`}>
@@ -225,7 +226,7 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
               <Eye className="h-3.5 w-3.5" /> Screenshot
             </a>
           )}
-          {lead.status !== 'approved' && (
+          {showApproveButtons && (
             <>
               <button onClick={() => act('approve')} disabled={!!loading}
                 className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60">
@@ -334,7 +335,7 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
           </div>
 
           {/* Note field for rejection/approval */}
-          {lead.status !== 'approved' && (
+          {showApproveButtons && (
             <div className="mt-3">
               <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Admin Note (optional)</label>
               <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
