@@ -17,6 +17,30 @@ const WHATSAPP_SUPPORT = process.env.NEXT_PUBLIC_WHATSAPP_SUPPORT ?? '9231802980
 
 const STEP_LABELS: Record<number, string> = { 1: 'Your Details', 2: 'Send Payment', 3: 'Upload Proof' }
 
+function getGAClientId(): string | undefined {
+  if (typeof document === 'undefined') return undefined
+  const match = document.cookie.match(/_ga=(?:GA\d\.\d\.)?(\d+\.\d+)/)
+  return match ? match[1] : undefined
+}
+
+function getGASessionId(): string | undefined {
+  if (typeof document === 'undefined') return undefined
+  const cookies = document.cookie.split(';')
+  for (const c of cookies) {
+    const trimmed = c.trim()
+    if (trimmed.startsWith('_ga_')) {
+      const parts = trimmed.split('=')
+      if (parts[1]) {
+        const gsParts = parts[1].split('.')
+        if (gsParts.length >= 3 && /^\d+$/.test(gsParts[2])) {
+          return gsParts[2]
+        }
+      }
+    }
+  }
+  return undefined
+}
+
 // ── Google Ads helpers ──────────────────────────────────────────────────────
 // Fires a conversion event, optionally setting Enhanced Conversions user_data
 // first. Retries once after 1.5s if gtag hasn't loaded yet (race condition guard).
@@ -118,8 +142,13 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
       const utm_campaign = params.get('utm_campaign') || localStorage.getItem('lead_utm_campaign') || undefined
       const utm_content = params.get('utm_content') || localStorage.getItem('lead_utm_content') || undefined
 
-      // Generate event_id BEFORE the fetch — same value goes to CAPI (via API body) AND fbq()
       const leadEventId = crypto.randomUUID()
+      const gaClientId = getGAClientId()
+      const gaSessionId = getGASessionId()
+      const gclid = localStorage.getItem('lead_gclid') || params.get('gclid') || undefined
+      const wbraid = localStorage.getItem('lead_wbraid') || params.get('wbraid') || undefined
+      const gbraid = localStorage.getItem('lead_gbraid') || params.get('gbraid') || undefined
+      const fbclid = localStorage.getItem('lead_fbclid') || params.get('fbclid') || undefined
 
       const res = await fetch('/api/leads', {
         method: 'POST',
@@ -132,9 +161,12 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
           utm_medium,
           utm_campaign,
           utm_content,
-          // Click IDs — most precise attribution signal; read from localStorage (set on first touch)
-          gclid: localStorage.getItem('lead_gclid') || undefined,
-          fbclid: localStorage.getItem('lead_fbclid') || undefined,
+          gclid,
+          wbraid,
+          gbraid,
+          fbclid,
+          ga_client_id: gaClientId,
+          ga_session_id: gaSessionId,
           eventId: leadEventId,
         }),
       })
@@ -587,12 +619,30 @@ export default function EnrollPage() {
       // Also capture source on direct enroll page visits
       const params = new URLSearchParams(window.location.search)
       const utm = params.get('utm_source') || params.get('ref')
+      const gclid = params.get('gclid')
+      const wbraid = params.get('wbraid')
+      const gbraid = params.get('gbraid')
+      const fbclid = params.get('fbclid')
+
+      // Capture click IDs
+      if (gclid && !localStorage.getItem('lead_gclid')) localStorage.setItem('lead_gclid', gclid)
+      if (wbraid && !localStorage.getItem('lead_wbraid')) localStorage.setItem('lead_wbraid', wbraid)
+      if (gbraid && !localStorage.getItem('lead_gbraid')) localStorage.setItem('lead_gbraid', gbraid)
+      if (fbclid && !localStorage.getItem('lead_fbclid')) localStorage.setItem('lead_fbclid', fbclid)
+
+      // Determine lead source
       if (utm) {
         localStorage.setItem('lead_source', utm.toLowerCase())
+      } else if (gclid || wbraid || gbraid) {
+        localStorage.setItem('lead_source', 'google')
+      } else if (fbclid) {
+        localStorage.setItem('lead_source', 'facebook')
       } else if (!localStorage.getItem('lead_source') && document.referrer) {
         const ref = document.referrer.toLowerCase()
         if (ref.includes('facebook') || ref.includes('fb.com') || ref.includes('instagram')) localStorage.setItem('lead_source', 'facebook')
         else if (ref.includes('google')) localStorage.setItem('lead_source', 'google')
+        else if (ref.includes('tiktok')) localStorage.setItem('lead_source', 'tiktok')
+        else if (ref.includes('youtube')) localStorage.setItem('lead_source', 'youtube')
       }
       
       const utmMedium = params.get('utm_medium')
@@ -603,20 +653,6 @@ export default function EnrollPage() {
         
       const utmContent = params.get('utm_content')
       if (utmContent) localStorage.setItem('lead_utm_content', utmContent)
-
-      // Capture click IDs — most precise attribution signal from each ad platform
-      // Only store on first touch; never overwrite (preserve the original paid click)
-      const gclid = params.get('gclid')
-      if (gclid && !localStorage.getItem('lead_gclid')) {
-        localStorage.setItem('lead_gclid', gclid)
-        if (!localStorage.getItem('lead_source')) localStorage.setItem('lead_source', 'google')
-      }
-
-      const fbclid = params.get('fbclid')
-      if (fbclid && !localStorage.getItem('lead_fbclid')) {
-        localStorage.setItem('lead_fbclid', fbclid)
-        if (!localStorage.getItem('lead_source')) localStorage.setItem('lead_source', 'facebook')
-      }
     }
   }, [])
 

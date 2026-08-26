@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
   // Fetch lead for conversion data
   const { data: lead } = await supabaseAdmin
     .from('leads')
-    .select('id, name, email, whatsapp, gclid, site, utm_content')
+    .select('*')
     .eq('id', leadId)
     .maybeSingle()
 
@@ -158,29 +158,48 @@ export async function POST(req: NextRequest) {
       const GA4_ID     = process.env.NEXT_PUBLIC_GA4_ID || 'G-Y2SZLNREPD'
       const API_SECRET = process.env.GA4_API_SECRET || 'ZCnSzNHmT5Cte3cAOZ8rVQ'
 
+      const gaClientIdFromUtm = lead.utm_content?.match(/\[ga:([^\]]+)\]/)?.[1]
+      const gaSessionIdFromUtm = lead.utm_content?.match(/\[session:([^\]]+)\]/)?.[1]
+      const wbraidFromUtm = lead.utm_content?.match(/\[wbraid:([^\]]+)\]/)?.[1]
+      const gbraidFromUtm = lead.utm_content?.match(/\[gbraid:([^\]]+)\]/)?.[1]
+
+      const resolvedClientId = lead.ga_client_id || gaClientIdFromUtm || (lead.email ? hashData(lead.email.toLowerCase().trim()).slice(0, 20) : `admin_${Date.now()}`)
+      const resolvedSessionId = lead.ga_session_id || gaSessionIdFromUtm
+      const resolvedWbraid = lead.wbraid || wbraidFromUtm
+      const resolvedGbraid = lead.gbraid || gbraidFromUtm
+
       if (GA4_ID && API_SECRET) {
+        const purchaseParams: Record<string, any> = {
+          transaction_id: transactionId,
+          value: coursePrice,
+          currency: 'PKR',
+          ...(lead.gclid && { gclid: lead.gclid }),
+          ...(resolvedWbraid && { wbraid: resolvedWbraid }),
+          ...(resolvedGbraid && { gbraid: resolvedGbraid }),
+          items: [{
+            item_id:   'ai-bootcamp-pk',
+            item_name: process.env.COURSE_NAME || 'AI Video Bootcamp Pakistan',
+            price:     coursePrice,
+            quantity:  1,
+          }],
+        }
+
+        // Stitch back to the user's active Google/YouTube ad session in GA4
+        if (resolvedSessionId && !isNaN(Number(resolvedSessionId))) {
+          purchaseParams.session_id = Number(resolvedSessionId)
+          purchaseParams.engagement_time_msec = 100
+        }
+
         await fetch(
           `https://www.google-analytics.com/mp/collect?measurement_id=${GA4_ID}&api_secret=${API_SECRET}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              client_id: lead.email
-                ? hashData(lead.email.toLowerCase().trim()).slice(0, 20)
-                : `admin_${Date.now()}`,
+              client_id: resolvedClientId,
               events: [{
                 name: 'purchase',
-                params: {
-                  transaction_id: transactionId,
-                  value: coursePrice,
-                  currency: 'PKR',
-                  items: [{
-                    item_id:   'ai-bootcamp-pk',
-                    item_name: process.env.COURSE_NAME || 'AI Video Bootcamp Pakistan',
-                    price:     coursePrice,
-                    quantity:  1,
-                  }],
-                },
+                params: purchaseParams,
               }],
               ...(lead.email && {
                 user_properties: {

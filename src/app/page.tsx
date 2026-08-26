@@ -481,8 +481,33 @@ export default function HomePage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const utm = params.get('utm_source') || params.get('ref')
+      const gclid = params.get('gclid')
+      const wbraid = params.get('wbraid')
+      const gbraid = params.get('gbraid')
+      const fbclid = params.get('fbclid')
+
+      // 1. Capture click IDs — most precise attribution signal from each ad platform
+      // Only store on first touch; never overwrite (preserve the original paid click)
+      if (gclid && !localStorage.getItem('lead_gclid')) {
+        localStorage.setItem('lead_gclid', gclid)
+      }
+      if (wbraid && !localStorage.getItem('lead_wbraid')) {
+        localStorage.setItem('lead_wbraid', wbraid)
+      }
+      if (gbraid && !localStorage.getItem('lead_gbraid')) {
+        localStorage.setItem('lead_gbraid', gbraid)
+      }
+      if (fbclid && !localStorage.getItem('lead_fbclid')) {
+        localStorage.setItem('lead_fbclid', fbclid)
+      }
+
+      // 2. Determine lead source prioritizing paid click IDs
       if (utm) {
         localStorage.setItem('lead_source', utm.toLowerCase())
+      } else if (gclid || wbraid || gbraid) {
+        localStorage.setItem('lead_source', 'google')
+      } else if (fbclid) {
+        localStorage.setItem('lead_source', 'facebook')
       } else if (!localStorage.getItem('lead_source') && document.referrer) {
         const ref = document.referrer.toLowerCase()
         if (ref.includes('facebook') || ref.includes('fb.com') || ref.includes('instagram')) localStorage.setItem('lead_source', 'facebook')
@@ -491,20 +516,13 @@ export default function HomePage() {
         else if (ref.includes('youtube')) localStorage.setItem('lead_source', 'youtube')
       }
 
-      // Capture click IDs — most precise attribution signal from each ad platform
-      // Only store on first touch; never overwrite (preserve the original paid click)
-      const gclid = params.get('gclid')
-      if (gclid && !localStorage.getItem('lead_gclid')) {
-        localStorage.setItem('lead_gclid', gclid)
-        // Infer source from gclid if utm_source wasn't set
-        if (!localStorage.getItem('lead_source')) localStorage.setItem('lead_source', 'google')
-      }
-
-      const fbclid = params.get('fbclid')
-      if (fbclid && !localStorage.getItem('lead_fbclid')) {
-        localStorage.setItem('lead_fbclid', fbclid)
-        if (!localStorage.getItem('lead_source')) localStorage.setItem('lead_source', 'facebook')
-      }
+      // 3. Persist UTM details
+      const utmMedium = params.get('utm_medium')
+      if (utmMedium) localStorage.setItem('lead_utm_medium', utmMedium)
+      const utmCampaign = params.get('utm_campaign')
+      if (utmCampaign) localStorage.setItem('lead_utm_campaign', utmCampaign)
+      const utmContent = params.get('utm_content')
+      if (utmContent) localStorage.setItem('lead_utm_content', utmContent)
     }
 
     const onScroll = () => setHeaderScrolled(window.scrollY > 20)
