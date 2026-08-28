@@ -64,8 +64,8 @@ export async function GET(req: NextRequest) {
       if (p?.amount && Number(p.amount) > 0) {
         totalRevenue += Number(p.amount)
       } else {
-        // Fallback if payment record had no custom amount
-        totalRevenue += 1999
+        const match = l.utm_content?.match(/\[amount:(\d+)\]/)
+        totalRevenue += match ? Number(match[1]) : 1999
       }
     })
 

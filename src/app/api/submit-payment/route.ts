@@ -22,14 +22,14 @@ export async function POST(req: NextRequest) {
       eventId,
     } = body
 
-    if (!leadId || !fileBase64) {
+    if (!leadId) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
     }
 
     // Verify lead exists
     const { data: lead } = await supabaseAdmin
       .from('leads')
-      .select('id, name, email, whatsapp, status')
+      .select('id, name, email, whatsapp, status, utm_content')
       .eq('id', leadId)
       .maybeSingle()
 
@@ -37,53 +37,77 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Lead not found.' }, { status: 404 })
     }
 
-    // Upload screenshot to Supabase Storage
-    const imageBuffer = Buffer.from(fileBase64, 'base64')
-    const storagePath = `screenshots/${leadId}/${Date.now()}-${fileName}`
+    const matchAmount = lead?.utm_content?.match(/\[amount:(\d+)\]/)
+    const fallbackAmount = matchAmount ? Number(matchAmount[1]) : (Number(process.env.COURSE_PRICE) || 1999)
+    const finalAmount = Number(amount) || fallbackAmount
 
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from('payment-screenshots')
-      .upload(storagePath, imageBuffer, {
-        contentType,
-        upsert: false,
-      })
-
+    // Upload screenshot to Supabase Storage if fileBase64 provided
     let screenshotUrl: string | undefined
-    if (!uploadError) {
-      const { data: urlData } = supabaseAdmin.storage
+    if (fileBase64 && fileName) {
+      const imageBuffer = Buffer.from(fileBase64, 'base64')
+      const storagePath = `screenshots/${leadId}/${Date.now()}-${fileName}`
+
+      const { error: uploadError } = await supabaseAdmin.storage
         .from('payment-screenshots')
-        .getPublicUrl(storagePath)
-      screenshotUrl = urlData?.publicUrl
+        .upload(storagePath, imageBuffer, {
+          contentType: contentType || 'image/jpeg',
+          upsert: false,
+        })
+
+      if (!uploadError) {
+        const { data: urlData } = supabaseAdmin.storage
+          .from('payment-screenshots')
+          .getPublicUrl(storagePath)
+        screenshotUrl = urlData?.publicUrl
+      }
     }
 
-    // Insert payment record
-    const { error: paymentError } = await supabaseAdmin
+    // Insert or update payment record
+    const { data: existingPayment } = await supabaseAdmin
       .from('payments')
-      .insert({
-        lead_id: leadId,
-        screenshot_url: screenshotUrl,
-        image_hash: imageHash,
-        transaction_id: transactionId,
-        amount,
-        recipient_number: recipientNumber,
-        sender_name: senderName,
-        direction,
-        ai_verified: aiResult?.valid ?? false,
-        ai_result: aiResult,
-      })
+      .select('id')
+      .eq('lead_id', leadId)
+      .maybeSingle()
 
-    if (paymentError) throw paymentError
+    if (existingPayment) {
+      await supabaseAdmin
+        .from('payments')
+        .update({
+          screenshot_url: screenshotUrl,
+          image_hash: imageHash,
+          transaction_id: transactionId,
+          amount: finalAmount,
+          recipient_number: recipientNumber,
+          sender_name: senderName,
+          direction,
+          ai_verified: aiResult?.valid ?? false,
+          ai_result: aiResult,
+        })
+        .eq('id', existingPayment.id)
+    } else {
+      const { error: paymentError } = await supabaseAdmin
+        .from('payments')
+        .insert({
+          lead_id: leadId,
+          screenshot_url: screenshotUrl,
+          image_hash: imageHash,
+          transaction_id: transactionId,
+          amount: finalAmount,
+          recipient_number: recipientNumber,
+          sender_name: senderName,
+          direction,
+          ai_verified: aiResult?.valid ?? false,
+          ai_result: aiResult,
+        })
+
+      if (paymentError) throw paymentError
+    }
 
     // Update lead status
     await supabaseAdmin
       .from('leads')
       .update({ status: 'payment_submitted' })
       .eq('id', leadId)
-
-
-
-    // Send WhatsApp notification to admin (via WhatsApp API link — manual trigger)
-    // In production: integrate with WhatsApp Business API for auto-notify
 
     // Send Facebook CAPI Purchase Event
     try {
@@ -122,7 +146,7 @@ export async function POST(req: NextRequest) {
                 },
                 custom_data: {
                   currency: 'PKR',
-                  value: Number(process.env.COURSE_PRICE) || 1999,
+                  value: finalAmount,
                 }
               }
             ]

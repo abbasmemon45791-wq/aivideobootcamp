@@ -7,7 +7,7 @@ const hashData = (data: string) => crypto.createHash('sha256').update(data).dige
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, whatsapp, source, utm_medium, utm_campaign, utm_content, eventId, gclid, wbraid, gbraid, fbclid, ga_client_id, ga_session_id } = body
+    const { name, email, whatsapp, total_amount, selected_upsells, source, utm_medium, utm_campaign, utm_content, eventId, gclid, wbraid, gbraid, fbclid, ga_client_id, ga_session_id } = body
 
     // Validation
     if (!name || name.trim().length < 2 || name.length > 100)
@@ -17,17 +17,7 @@ export async function POST(req: NextRequest) {
     if (!/^[+\d\s-]{7,20}$/.test(whatsapp))
       return NextResponse.json({ error: 'Please enter a valid WhatsApp number.' }, { status: 400 })
 
-    // Check duplicate email — if already pending or submitted, return existing lead
-    const { data: existing } = await supabaseAdmin
-      .from('leads')
-      .select('id, status')
-      .eq('email', email.toLowerCase().trim())
-      .in('status', ['pending', 'payment_submitted', 'approved'])
-      .maybeSingle()
-
-    if (existing) {
-      return NextResponse.json({ id: existing.id, existing: true })
-    }
+    const finalAmount = Number(total_amount) || 1999
 
     // Get IP and User-Agent for basic rate limiting / fraud tracking / attribution
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? 
@@ -50,7 +40,31 @@ export async function POST(req: NextRequest) {
     const wbraidTag = wbraid ? ` [wbraid:${wbraid}]` : ''
     const gbraidTag = gbraid ? ` [gbraid:${gbraid}]` : ''
     const siteTag = ` [site:${site}]`
-    const updatedUtmContent = utm_content ? `${utm_content}${siteTag}${gaTag}${sessionTag}${wbraidTag}${gbraidTag}` : `${siteTag}${gaTag}${sessionTag}${wbraidTag}${gbraidTag}`
+    const upsellTag = selected_upsells?.length ? ` [upsells:${selected_upsells.join(',')}]` : ''
+    const amountTag = ` [amount:${finalAmount}]`
+    const updatedUtmContent = utm_content ? `${utm_content}${siteTag}${gaTag}${sessionTag}${wbraidTag}${gbraidTag}${upsellTag}${amountTag}` : `${siteTag}${gaTag}${sessionTag}${wbraidTag}${gbraidTag}${upsellTag}${amountTag}`
+
+    // Check duplicate email — if already pending or submitted, update and return existing lead
+    const { data: existing } = await supabaseAdmin
+      .from('leads')
+      .select('id, status')
+      .eq('email', email.toLowerCase().trim())
+      .in('status', ['pending', 'payment_submitted', 'approved'])
+      .maybeSingle()
+
+    if (existing) {
+      if (existing.status === 'pending') {
+        await supabaseAdmin
+          .from('leads')
+          .update({
+            utm_content: updatedUtmContent.trim(),
+            name: name.trim(),
+            whatsapp: whatsapp.trim(),
+          })
+          .eq('id', existing.id)
+      }
+      return NextResponse.json({ id: existing.id, existing: true })
+    }
 
     const leadPayload: Record<string, any> = {
       name: name.trim(),
@@ -96,7 +110,7 @@ export async function POST(req: NextRequest) {
 
     // Send Facebook CAPI Lead Event
     try {
-      const PIXEL_ID = '2170349516868440'
+      const PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || process.env.NEXT_PUBLIC_META_PIXEL_ID || '2170349516868440'
       const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
       if (PIXEL_ID && ACCESS_TOKEN) {
         const hashedEmail = hashData(email.toLowerCase().trim())
@@ -127,12 +141,12 @@ export async function POST(req: NextRequest) {
                 },
                 custom_data: {
                   currency: 'PKR',
-                  value: Number(process.env.COURSE_PRICE) || 1999,
+                  value: finalAmount,
                 },
               }
             ]
           })
-        })
+        }).catch(err => console.error('FB CAPI Error (Lead):', err))
       }
     } catch (fbErr) {
       console.error('FB CAPI Error (Lead):', fbErr)

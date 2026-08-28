@@ -126,6 +126,9 @@ export async function POST(req: NextRequest) {
     const { data: p } = await supabaseAdmin.from('payments').select('amount').eq('id', currentPaymentId).maybeSingle()
     if (p?.amount && Number(p.amount) > 0) {
       coursePrice = Number(p.amount)
+    } else {
+      const match = lead?.utm_content?.match(/\[amount:(\d+)\]/)
+      coursePrice = match ? Number(match[1]) : (Number(process.env.COURSE_PRICE) || 1999)
     }
     await supabaseAdmin
       .from('payments')
@@ -137,7 +140,8 @@ export async function POST(req: NextRequest) {
       })
       .eq('id', currentPaymentId)
   } else if (action === 'approve') {
-    coursePrice = Number(process.env.COURSE_PRICE) || 1999
+    const match = lead?.utm_content?.match(/\[amount:(\d+)\]/)
+    coursePrice = match ? Number(match[1]) : (Number(process.env.COURSE_PRICE) || 1999)
     await supabaseAdmin
       .from('payments')
       .insert({
@@ -151,8 +155,114 @@ export async function POST(req: NextRequest) {
       })
   }
 
-  // Note: Purchase conversion event is fired when user uploads payment proof on Step 3.
-  // No conversion event is fired here to avoid duplicate purchase reporting.
+  // ── Fire conversion events only on FIRST-TIME APPROVE ─────────────────────
+  if (action === 'approve' && lead && !wasAlreadyApproved) {
+    const transactionId = `lead_${leadId}_${Date.now()}`
+
+    // ── 1. GA4 Measurement Protocol (server-side) ─────────────────────────
+    try {
+      const GA4_ID     = process.env.NEXT_PUBLIC_GA4_ID || 'G-Y2SZLNREPD'
+      const API_SECRET = process.env.GA4_API_SECRET || 'ZCnSzNHmT5Cte3cAOZ8rVQ'
+
+      const gaClientIdFromUtm = lead.utm_content?.match(/\[ga:([^\]]+)\]/)?.[1]
+      const gaSessionIdFromUtm = lead.utm_content?.match(/\[session:([^\]]+)\]/)?.[1]
+      const wbraidFromUtm = lead.utm_content?.match(/\[wbraid:([^\]]+)\]/)?.[1]
+      const gbraidFromUtm = lead.utm_content?.match(/\[gbraid:([^\]]+)\]/)?.[1]
+
+      const resolvedClientId = lead.ga_client_id || gaClientIdFromUtm || (lead.email ? hashData(lead.email.toLowerCase().trim()).slice(0, 20) : `admin_${Date.now()}`)
+      const resolvedSessionId = lead.ga_session_id || gaSessionIdFromUtm
+      const resolvedWbraid = lead.wbraid || wbraidFromUtm
+      const resolvedGbraid = lead.gbraid || gbraidFromUtm
+
+      if (GA4_ID && API_SECRET) {
+        const purchaseParams: Record<string, any> = {
+          transaction_id: transactionId,
+          value:          coursePrice,
+          currency:       'PKR',
+          ...(lead.gclid && { gclid: lead.gclid }),
+          ...(resolvedWbraid && { wbraid: resolvedWbraid }),
+          ...(resolvedGbraid && { gbraid: resolvedGbraid }),
+          items: [
+            {
+              item_id:   'ai-bootcamp-pk',
+              item_name: process.env.COURSE_NAME || 'AI Video Bootcamp Pakistan',
+              price:     coursePrice,
+              quantity:  1,
+            },
+          ],
+        }
+
+        // Stitch back to the user's active Google/YouTube ad session in GA4
+        if (resolvedSessionId && !isNaN(Number(resolvedSessionId))) {
+          purchaseParams.session_id = Number(resolvedSessionId)
+          purchaseParams.engagement_time_msec = 100
+        }
+
+        await fetch(
+          `https://www.google-analytics.com/mp/collect?measurement_id=${GA4_ID}&api_secret=${API_SECRET}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              client_id: resolvedClientId,
+              events: [
+                {
+                  name: 'purchase',
+                  params: purchaseParams,
+                },
+              ],
+              ...(lead.email && {
+                user_properties: {
+                  email: { value: lead.email },
+                },
+              }),
+            }),
+          }
+        )
+      }
+    } catch (ga4Err) {
+      console.error('[Admin Approve] GA4 Measurement Protocol error:', ga4Err)
+    }
+
+    // ── 2. Facebook CAPI Purchase (server-side) ────────────────────────────
+    try {
+      const PIXEL_ID     = process.env.NEXT_PUBLIC_FB_PIXEL_ID || process.env.NEXT_PUBLIC_META_PIXEL_ID || '2170349516868440'
+      const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
+
+      if (PIXEL_ID && ACCESS_TOKEN && lead.email) {
+        const hashedEmail = hashData(lead.email.toLowerCase().trim())
+        const digitsOnly  = lead.whatsapp?.replace(/\D/g, '')
+        const hashedPhone = digitsOnly ? hashData(digitsOnly) : undefined
+
+        await fetch(
+          `https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              data: [{
+                event_name:        'Purchase',
+                event_time:        Math.floor(Date.now() / 1000),
+                action_source:     'other',
+                event_source_url:  `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/enroll`,
+                event_id:          transactionId,
+                user_data: {
+                  em: [hashedEmail],
+                  ...(hashedPhone && { ph: [hashedPhone] }),
+                },
+                custom_data: {
+                  currency: 'PKR',
+                  value:    coursePrice,
+                },
+              }],
+            }),
+          }
+        )
+      }
+    } catch (fbErr) {
+      console.error('[Admin Approve] FB CAPI error:', fbErr)
+    }
+  }
 
   return NextResponse.json({ success: true, status: newLeadStatus })
 }

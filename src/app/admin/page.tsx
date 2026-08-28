@@ -111,7 +111,7 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
             className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
           {err && <div className="flex items-center gap-2 text-xs font-medium text-red-600"><AlertCircle className="h-4 w-4" />{err}</div>}
           <button type="submit" disabled={loading}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02] disabled:opacity-70"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02] disabled:opacity-70 cursor-pointer"
             style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>
             {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : 'Enter Admin Dashboard'}
           </button>
@@ -163,12 +163,25 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
     }
   }
 
+  const upsellsMatch = lead.utm_content?.match(/\[upsells:([^\]]+)\]/)
+  const upsellList = upsellsMatch ? upsellsMatch[1].split(',') : []
+  const hasVault = upsellList.includes('vault')
+  const hasMetaAds = upsellList.includes('meta_ads')
+  const amountMatch = lead.utm_content?.match(/\[amount:(\d+)\]/)
+  const expectedAmount = amountMatch ? Number(amountMatch[1]) : (1999 + (hasVault ? 499 : 0) + (hasMetaAds ? 999 : 0))
+
   const handleSendAccess = () => {
     if (!lead.access_sent) {
       markAccessSent()
     }
     const formattedWa = formatWhatsAppNumber(lead.whatsapp)
-    window.open(`https://wa.me/${formattedWa}?text=${encodeURIComponent(`Hi ${lead.name},\n\nYour payment for the AI Bootcamp has been verified! 🎉\n\nHere is your course access link:\nhttps://your-lms-link.com\n\nHappy learning!`)}`, '_blank')
+    const addons: string[] = []
+    if (hasVault) addons.push("AI Creator's Cheat Code Vault")
+    if (hasMetaAds) addons.push("Meta (Facebook) Ads Masterclass")
+    const addonText = addons.length > 0 ? ` + ${addons.join(' + ')}` : ''
+
+    const message = `Hi ${lead.name},\n\nYour payment for the AI Video Bootcamp${addonText} has been verified! 🎉\n\nHere is your course access link:\nhttps://your-lms-link.com\n\nHappy learning!`
+    window.open(`https://wa.me/${formattedWa}?text=${encodeURIComponent(message)}`, '_blank')
   }
 
   const uaInfo = parseUA(lead.user_agent)
@@ -180,7 +193,7 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
       <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-3">
           <input type="checkbox" checked={isSelected} onChange={() => onToggleSelect(lead.id)}
-            className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+            className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
           <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-slate-900">{lead.name}</span>
@@ -190,8 +203,18 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
             <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
               isSite2 ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' : 'bg-purple-50 text-purple-700 border border-purple-200'
             }`}>
-              {isSite2 ? 'Site 2 (No SS / 1999)' : 'Site 1 (SS / 1999)'}
+              {isSite2 ? 'Site 2 (No SS)' : 'Site 1 (SS)'}
             </span>
+            {hasVault && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-orange-50 text-orange-700 border border-orange-200 px-1.5 py-0.5 text-[10px] font-bold">
+                🟧 + Vault (499)
+              </span>
+            )}
+            {hasMetaAds && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 text-[10px] font-bold">
+                🟪 + Meta Ads (999)
+              </span>
+            )}
           </div>
           <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs text-slate-500">
             <span className="truncate max-w-[120px] sm:max-w-none">{lead.email}</span>
@@ -204,18 +227,19 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
             )}
             <span>{new Date(lead.created_at).toLocaleDateString('en-PK')}</span>
           </div>
-          {payment && (
-            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
-              {payment.amount && <span className="text-slate-900 font-bold">Paid: Rs. {payment.amount.toLocaleString()}</span>}
-              {payment.recipient_number && <span className="text-slate-500">→ {payment.recipient_number}</span>}
-              {payment.transaction_id && <span className="font-mono text-slate-400">{payment.transaction_id}</span>}
-              {payment.ai_verified !== undefined && (
-                <span className={`font-semibold ${payment.ai_verified ? 'text-emerald-600' : 'text-amber-600'}`}>
-                  {payment.ai_verified ? '✓ AI Verified' : '⚠ Not AI Verified'}
-                </span>
-              )}
-            </div>
-          )}
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+            <span className="text-slate-600 font-medium">Expected: Rs. {expectedAmount.toLocaleString()}</span>
+            {payment?.amount && (
+              <span className="text-slate-900 font-bold">Paid: Rs. {payment.amount.toLocaleString()}</span>
+            )}
+            {payment?.recipient_number && <span className="text-slate-500">→ {payment.recipient_number}</span>}
+            {payment?.transaction_id && <span className="font-mono text-slate-400">{payment.transaction_id}</span>}
+            {payment?.ai_verified !== undefined && (
+              <span className={`font-semibold ${payment.ai_verified ? 'text-emerald-600' : 'text-amber-600'}`}>
+                {payment.ai_verified ? '✓ AI Verified' : '⚠ Not AI Verified'}
+              </span>
+            )}
+          </div>
         </div>
         </div>
 
@@ -229,13 +253,13 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
           {showApproveButtons && (
             <>
               <button onClick={() => act('approve')} disabled={!!loading}
-                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60">
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60 cursor-pointer">
                 {loading === 'approve' ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
                 Approve
               </button>
               {lead.status !== 'rejected' && (
                 <button onClick={() => act('reject')} disabled={!!loading}
-                  className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-60">
+                  className="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-60 cursor-pointer">
                   {loading === 'reject' ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
                   Reject
                 </button>
@@ -244,12 +268,12 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
           )}
           {lead.status === 'approved' && (
             <button onClick={handleSendAccess}
-              className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold ${lead.access_sent ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}>
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer ${lead.access_sent ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}>
               <ExternalLink className="h-3.5 w-3.5" /> {lead.access_sent ? 'Access Sent ✓' : 'Send Access'}
             </button>
           )}
           <button onClick={() => setExpanded(!expanded)}
-            className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100">
+            className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 cursor-pointer">
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
           </button>
         </div>
@@ -446,7 +470,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
     load()
   }
 
-  // Stats — sourced from the funnel API (global DB counts, not the current page slice)
+  // Stats — sourced from the funnel API
   const submitted = funnel.submitted
   const approved  = funnel.approved
   const rejected  = funnel.rejected
@@ -488,15 +512,15 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           </div>
           <div className="flex items-center gap-2">
             <button onClick={exportCSV}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 cursor-pointer">
               <Download className="h-3.5 w-3.5" /> Export CSV
             </button>
             <button onClick={() => load()}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 cursor-pointer">
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button onClick={onLogout}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50">
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 cursor-pointer">
               <LogOut className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -575,7 +599,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                 { id: 'techpulse-noss', label: 'Site 2 (No SS / Rs. 1,999)' }
               ].map(s => (
                 <button key={s.id} onClick={() => { setSelectedSite(s.id); setPage(1) }}
-                  className={`rounded-full px-3 py-1 text-xs font-bold transition ${selectedSite === s.id ? 'bg-blue-600 text-white shadow-sm' : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                  className={`rounded-full px-3 py-1 text-xs font-bold transition cursor-pointer ${selectedSite === s.id ? 'bg-blue-600 text-white shadow-sm' : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
                   {s.label}
                 </button>
               ))}
@@ -588,7 +612,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1">Status:</span>
                 {['', 'pending', 'payment_submitted', 'approved', 'rejected'].map(f => (
                   <button key={f} onClick={() => { setFilter(f); setPage(1) }}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${filter === f ? 'text-white shadow-sm' : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition cursor-pointer ${filter === f ? 'text-white shadow-sm' : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
                     style={filter === f ? { background: 'linear-gradient(135deg,#2563eb,#06b6d4)' } : {}}>
                     {f === '' ? 'All' : STATUS_LABEL[f]?.label ?? f}
                   </button>
@@ -607,7 +631,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                   { id: 'direct', label: 'Direct' }
                 ].map(s => (
                   <button key={s.id} onClick={() => { setSelectedSource(s.id); setPage(1) }}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${selectedSource === s.id ? 'bg-slate-900 text-white shadow-sm' : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition cursor-pointer ${selectedSource === s.id ? 'bg-slate-900 text-white shadow-sm' : 'border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
                     {s.label}
                   </button>
                 ))}
@@ -623,7 +647,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
                <span className="text-xs text-slate-400">to</span>
                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs outline-none focus:border-blue-500" />
                {(startDate || endDate || filter || (selectedSource !== 'all') || (selectedSite !== 'all') || search) && (
-                 <button type="button" onClick={() => { setStartDate(''); setEndDate(''); setFilter(''); setSelectedSource('all'); setSelectedSite('all'); setSearch(''); setPage(1); }} className="text-xs text-rose-600 font-semibold hover:underline ml-1">
+                 <button type="button" onClick={() => { setStartDate(''); setEndDate(''); setFilter(''); setSelectedSource('all'); setSelectedSite('all'); setSearch(''); setPage(1); }} className="text-xs text-rose-600 font-semibold hover:underline ml-1 cursor-pointer">
                    Clear All Filters
                  </button>
                )}
@@ -631,7 +655,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
 
              <div className="flex items-center gap-2">
                <input type="text" placeholder="Search name, email, phone..." value={search} onChange={e => setSearch(e.target.value)} className="w-52 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs outline-none focus:border-blue-500" />
-               <button type="submit" className="rounded-lg bg-slate-800 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-700">Search</button>
+               <button type="submit" className="rounded-lg bg-slate-800 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 cursor-pointer">Search</button>
              </div>
           </form>
         </div>
@@ -664,13 +688,13 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-3 rounded-full shadow-2xl flex items-center gap-4 z-50">
             <span className="text-sm font-semibold pl-2">{selectedIds.size} selected</span>
             <div className="flex items-center gap-2">
-              <button onClick={() => handleBulkAction('approve')} disabled={!!bulkLoading} className="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 disabled:opacity-50">
+              <button onClick={() => handleBulkAction('approve')} disabled={!!bulkLoading} className="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 disabled:opacity-50 cursor-pointer">
                 {bulkLoading === 'approve' ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />} Approve
               </button>
-              <button onClick={() => handleBulkAction('reject')} disabled={!!bulkLoading} className="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 disabled:opacity-50">
+              <button onClick={() => handleBulkAction('reject')} disabled={!!bulkLoading} className="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 disabled:opacity-50 cursor-pointer">
                 {bulkLoading === 'reject' ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />} Reject
               </button>
-              <button onClick={() => handleBulkAction('delete')} disabled={!!bulkLoading} className="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 disabled:opacity-50">
+              <button onClick={() => handleBulkAction('delete')} disabled={!!bulkLoading} className="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 disabled:opacity-50 cursor-pointer">
                 {bulkLoading === 'delete' ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <AlertCircle className="h-3.5 w-3.5" />} Delete
               </button>
             </div>
@@ -681,12 +705,12 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         {total > 50 && (
           <div className="mt-6 flex items-center justify-center gap-3">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40">
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer">
               Previous
             </button>
             <span className="text-sm text-slate-500">Page {page}</span>
             <button onClick={() => setPage(p => p + 1)} disabled={leads.length < 50}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40">
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer">
               Next
             </button>
           </div>

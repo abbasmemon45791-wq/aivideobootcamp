@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, ArrowRight, User, Wallet, Upload, Check,
   Lock, LoaderCircle, Copy, Shield, Image as ImageIcon,
-  X, AlertCircle, CheckCircle, ChevronDown, MessageCircle, Star, Sparkles
+  AlertCircle, CheckCircle, MessageCircle, Star, Sparkles
 } from 'lucide-react'
 
-const COURSE_PRICE = 1999
+const BASE_PRICE = 1999
+const VAULT_PRICE = 499
+const META_ADS_PRICE = 999
+
 const EASYPAISA_NUMBER = process.env.NEXT_PUBLIC_EASYPAISA_NUMBER ?? '03458996578'
 const JAZZCASH_NUMBER  = process.env.NEXT_PUBLIC_JAZZCASH_NUMBER  ?? '03180236635'
 const HBL_ACCOUNT      = process.env.NEXT_PUBLIC_HBL_ACCOUNT      ?? '22567902223303'
@@ -41,9 +44,7 @@ function getGASessionId(): string | undefined {
   return undefined
 }
 
-// ── Google Ads helpers ──────────────────────────────────────────────────────
-// Fires a conversion event, optionally setting Enhanced Conversions user_data
-// first. Retries once after 1.5s if gtag hasn't loaded yet (race condition guard).
+// ── Google Ads / GA4 helpers ────────────────────────────────────────────────
 function gtagSafe(
   params: Record<string, unknown>,
   userData?: { email: string; phone: string }
@@ -51,7 +52,6 @@ function gtagSafe(
   const fire = () => {
     if (typeof window === 'undefined' || !(window as any).gtag) return
     if (userData) {
-      // Normalise phone to E.164 — must be set BEFORE the conversion event
       const normPhone = userData.phone.replace(/\D/g, '')
       const e164 = normPhone.startsWith('92') ? `+${normPhone}` :
                    normPhone.startsWith('0')  ? `+92${normPhone.slice(1)}` :
@@ -67,15 +67,9 @@ function gtagSafe(
   }
 }
 
-// Keep setUserData as a standalone helper for cases where we need to set
-// user identity without firing a conversion (currently unused but kept for clarity)
-function setUserData(email: string, phone: string) {
+function fireGA4Event(eventName: string, params: Record<string, unknown>) {
   if (typeof window === 'undefined' || !(window as any).gtag) return
-  const normPhone = phone.replace(/\D/g, '')
-  const e164 = normPhone.startsWith('92') ? `+${normPhone}` :
-               normPhone.startsWith('0')  ? `+92${normPhone.slice(1)}` :
-               `+${normPhone}`
-  ;(window as any).gtag('set', 'user_data', { email, phone_number: e164 })
+  ;(window as any).gtag('event', eventName, params)
 }
 
 // ── Step Indicator ─────────────────────────────────────────────────────────
@@ -107,13 +101,26 @@ function StepBar({ step }: { step: number }) {
   )
 }
 
-// ── Step 1 — Details ───────────────────────────────────────────────────────
-function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; email: string; whatsapp: string }) => void }) {
-  const [name, setName]     = useState('')
-  const [email, setEmail]   = useState('')
-  const [wa, setWa]         = useState('')
-  const [err, setErr]       = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+// ── Step 1 — Details & Upgrades ─────────────────────────────────────────────
+function Step1({ onDone }: {
+  onDone: (leadId: string, data: { name: string; email: string; whatsapp: string; totalAmount: number; selectedUpsells: string[] }) => void
+}) {
+  const [name, setName]         = useState('')
+  const [email, setEmail]       = useState('')
+  const [wa, setWa]             = useState('')
+  const [selectedUpsells, setSelectedUpsells] = useState<string[]>([])
+  const [err, setErr]           = useState<string | null>(null)
+  const [loading, setLoading]   = useState(false)
+
+  const toggleUpsell = (key: string) => {
+    setSelectedUpsells(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    )
+  }
+
+  const hasVault = selectedUpsells.includes('vault')
+  const hasMetaAds = selectedUpsells.includes('meta_ads')
+  const totalAmount = BASE_PRICE + (hasVault ? VAULT_PRICE : 0) + (hasMetaAds ? META_ADS_PRICE : 0)
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -137,10 +144,9 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
       
       source = source || 'direct'
 
-      // Capture full UTM params for campaign attribution
-      const utm_medium = params.get('utm_medium') || localStorage.getItem('lead_utm_medium') || undefined
+      const utm_medium   = params.get('utm_medium')   || localStorage.getItem('lead_utm_medium')   || undefined
       const utm_campaign = params.get('utm_campaign') || localStorage.getItem('lead_utm_campaign') || undefined
-      const utm_content = params.get('utm_content') || localStorage.getItem('lead_utm_content') || undefined
+      const utm_content  = params.get('utm_content')  || localStorage.getItem('lead_utm_content')  || undefined
 
       const leadEventId = crypto.randomUUID()
       const gaClientId = getGAClientId()
@@ -157,6 +163,8 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
           name: name.trim(),
           email: email.trim().toLowerCase(),
           whatsapp: wa.trim(),
+          total_amount: totalAmount,
+          selected_upsells: selectedUpsells,
           source,
           utm_medium,
           utm_campaign,
@@ -175,21 +183,32 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
 
       if (!data.existing) {
         if (typeof window !== 'undefined' && (window as any).fbq) {
-          (window as any).fbq('track', 'Lead', {}, { eventID: leadEventId });
+          (window as any).fbq('track', 'Lead', { value: totalAmount, currency: 'PKR' }, { eventID: leadEventId })
         }
 
-        // Google Ads Lead conversion — user_data set atomically inside gtagSafe
-        gtagSafe(
-          {
-            send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_LEAD_LABEL}`,
-            value: COURSE_PRICE,
-            currency: 'PKR',
-          },
-          { email: email.trim().toLowerCase(), phone: wa.trim() }
-        )
+        // Google Ads Lead conversion
+        if (process.env.NEXT_PUBLIC_GA_LEAD_LABEL) {
+          gtagSafe(
+            {
+              send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_LEAD_LABEL}`,
+              value: totalAmount,
+              currency: 'PKR',
+            },
+            { email: email.trim().toLowerCase(), phone: wa.trim() }
+          )
+        }
+
+        // GA4 generic event
+        fireGA4Event('generate_lead', { value: totalAmount, currency: 'PKR' })
       }
 
-      onDone(data.id, { name: name.trim(), email: email.trim().toLowerCase(), whatsapp: wa.trim() })
+      onDone(data.id, {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        whatsapp: wa.trim(),
+        totalAmount,
+        selectedUpsells,
+      })
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Something went wrong. Please try again.')
       setLoading(false)
@@ -197,57 +216,177 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
   }
 
   return (
-    <form onSubmit={submit} className="space-y-1">
-      <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-700">
-        <User className="h-3.5 w-3.5" /> Step 1 of 3
+    <form onSubmit={submit} className="space-y-0.5">
+      <div className="flex items-start justify-between gap-2 mb-1.5">
+        <div>
+          <h2 className="font-['Sora'] text-lg sm:text-xl font-extrabold leading-tight text-slate-900">
+            Reserve Your Seat
+          </h2>
+          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500">
+            <div className="flex text-amber-500">
+              {[...Array(5)].map((_, i) => <Star key={i} className="h-3 w-3 fill-amber-400" />)}
+            </div>
+            <span className="font-bold text-slate-700">4.9/5</span>
+            <span>(1,120+ Enrolled)</span>
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          <span className="rounded-full bg-blue-50 border border-blue-200/80 px-2 py-0.5 text-xs font-black text-blue-700">
+            Rs. {BASE_PRICE.toLocaleString()}
+          </span>
+          <div className="text-[9px] font-semibold text-blue-600">
+            Save 65%
+          </div>
+        </div>
       </div>
-      <h2 className="mt-2 font-[&#39;Sora&#39;] text-2xl font-extrabold leading-tight sm:text-3xl"
-        style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-        Reserve Your Seat.
-      </h2>
-      <p className="text-sm font-semibold text-blue-600">Enroll before price hits Rs {(COURSE_PRICE * 2.75).toLocaleString()}</p>
 
-      <div className="mt-4 space-y-3">
+      <div className="space-y-2.5 pt-1">
         {/* Full Name */}
         <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">Full Name *</span>
+          <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Full Name *</span>
           <input type="text" value={name} onChange={e => setName(e.target.value)} maxLength={100}
             placeholder="e.g. Ali Khan" required
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder:text-slate-400" />
         </label>
 
         {/* Email */}
         <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">Email *</span>
+          <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Email *</span>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} maxLength={255}
             placeholder="you@example.com" required
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder:text-slate-400" />
         </label>
 
         {/* WhatsApp */}
         <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">WhatsApp Number *</span>
+          <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500">WhatsApp Number *</span>
           <input type="tel" value={wa} onChange={e => setWa(e.target.value)} maxLength={20}
             placeholder="03XXXXXXXXX" required
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder:text-slate-400" />
         </label>
       </div>
 
+      {/* ── Order Bumps / Upgrades ───────────────────────────────────────── */}
+      <div className="pt-2.5 space-y-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+            <Sparkles className="h-3 w-3 text-amber-500" /> Exclusive Upgrades (Optional)
+          </span>
+          <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.2 rounded-full">
+            SAVE 80%
+          </span>
+        </div>
+
+        {/* Upsell 1: AI Creator's Cheat Code Vault */}
+        <div
+          onClick={() => toggleUpsell('vault')}
+          className={`group relative cursor-pointer select-none rounded-xl border p-2 sm:p-2.5 transition-all duration-200 ${
+            hasVault
+              ? 'border-blue-500 bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white shadow-[0_2px_12px_rgba(37,99,235,0.12)] ring-1 ring-blue-500/30'
+              : 'border-slate-200/90 bg-white hover:border-blue-300 hover:bg-slate-50/70 shadow-2xs'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <div className={`grid h-4.5 w-4.5 shrink-0 place-items-center rounded-md border text-white transition-all ${
+              hasVault ? 'border-blue-600 bg-gradient-to-br from-blue-600 to-cyan-500 shadow-2xs' : 'border-slate-300 bg-slate-50 group-hover:border-slate-400'
+            }`}>
+              {hasVault && <Check className="h-3 w-3 stroke-[3]" />}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="rounded bg-gradient-to-r from-orange-500 to-amber-500 px-1.5 py-0.2 text-[8px] font-black uppercase tracking-wider text-white shadow-2xs">
+                    SPECIAL
+                  </span>
+                  <span className="font-['Sora'] text-xs sm:text-[13px] font-bold text-slate-900 leading-none">
+                    AI Cheat Code Vault
+                  </span>
+                </div>
+                <span className="shrink-0 text-xs sm:text-[13px] font-black text-blue-600">
+                  +Rs. {VAULT_PRICE}
+                </span>
+              </div>
+              <p className="mt-0.5 text-[10px] sm:text-[11px] leading-tight text-slate-500">
+                50+ Midjourney prompts, 5 HD avatars, outreach scripts &amp; blueprints.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Upsell 2: Meta Ads Masterclass */}
+        <div
+          onClick={() => toggleUpsell('meta_ads')}
+          className={`group relative cursor-pointer select-none rounded-xl border p-2 sm:p-2.5 transition-all duration-200 ${
+            hasMetaAds
+              ? 'border-indigo-500 bg-gradient-to-r from-indigo-50/90 via-purple-50/40 to-white shadow-[0_2px_12px_rgba(99,102,241,0.12)] ring-1 ring-indigo-500/30'
+              : 'border-slate-200/90 bg-white hover:border-indigo-300 hover:bg-slate-50/70 shadow-2xs'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <div className={`grid h-4.5 w-4.5 shrink-0 place-items-center rounded-md border text-white transition-all ${
+              hasMetaAds ? 'border-indigo-600 bg-gradient-to-br from-indigo-600 to-purple-500 shadow-2xs' : 'border-slate-300 bg-slate-50 group-hover:border-slate-400'
+            }`}>
+              {hasMetaAds && <Check className="h-3 w-3 stroke-[3]" />}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="rounded bg-gradient-to-r from-purple-600 to-indigo-600 px-1.5 py-0.2 text-[8px] font-black uppercase tracking-wider text-white shadow-2xs">
+                    PREMIUM
+                  </span>
+                  <span className="font-['Sora'] text-xs sm:text-[13px] font-bold text-slate-900 leading-none">
+                    Meta Ads Masterclass
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="text-[10px] text-slate-400 line-through hidden xs:inline">Rs 4,999</span>
+                  <span className="text-xs sm:text-[13px] font-black text-indigo-600">
+                    +Rs. {META_ADS_PRICE}
+                  </span>
+                </div>
+              </div>
+              <p className="mt-0.5 text-[10px] sm:text-[11px] leading-tight text-slate-500">
+                Master Facebook &amp; Instagram Ads to scale and land high-paying clients.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {err && (
-        <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {err}
+        <div className="mt-2 flex items-start gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs text-red-700">
+          <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {err}
         </div>
       )}
 
+      {/* ── Dual-Action Apple/Linear Style Submit Button ─────────────────── */}
       <button type="submit" disabled={loading}
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.02] disabled:opacity-70"
+        className="mt-3.5 group relative inline-flex w-full items-center justify-between overflow-hidden rounded-full p-1.5 pr-4 sm:pr-5 text-white shadow-[0_4px_24px_rgba(37,99,235,0.38)] transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 cursor-pointer"
         style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>
-        {loading
-          ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Saving…</>
-          : <>Continue to Payment <ArrowRight className="h-5 w-5" /></>}
+        
+        {/* Dynamic Price Pill on Left */}
+        <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-2 text-xs sm:text-sm font-black backdrop-blur-md">
+          <span>Rs. {totalAmount.toLocaleString()}</span>
+          {selectedUpsells.length > 0 && (
+            <span className="rounded-full bg-emerald-400 px-1.5 py-0.5 text-[8.5px] text-emerald-950 font-black uppercase tracking-wider">
+              +{selectedUpsells.length} UP
+            </span>
+          )}
+        </div>
+
+        {/* Action text on Right */}
+        <div className="flex items-center gap-1.5 text-xs sm:text-sm font-extrabold tracking-wide">
+          {loading ? (
+            <><LoaderCircle className="h-4 w-4 animate-spin" /> Saving…</>
+          ) : (
+            <>Continue to Payment <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></>
+          )}
+        </div>
       </button>
 
-      <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+      <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-slate-400">
         <Lock className="h-3.5 w-3.5" /> Your details are private — used only to send your access.
       </p>
     </form>
@@ -263,69 +402,73 @@ function BankRow({ bank, title, num, colorClass = "text-slate-500" }: { bank: st
     setTimeout(() => setCopied(false), 1500)
   }
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-slate-200/60 py-4 last:border-0">
+    <div className="flex items-center justify-between gap-3 border-b border-slate-200/60 py-3 sm:py-4 last:border-0">
       <div className="min-w-0">
-        <div className={`text-[11px] font-bold uppercase tracking-wider ${colorClass}`}>{bank}</div>
+        <div className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${colorClass}`}>{bank}</div>
         {title && <div className="mt-0.5 text-xs text-slate-500">{title}</div>}
-        <div className="mt-1 text-sm font-semibold tracking-wide text-slate-800 sm:text-base">{num}</div>
+        <div className="mt-0.5 sm:mt-1 text-xs sm:text-base font-semibold tracking-wide text-slate-800">{num}</div>
       </div>
       <button onClick={copy}
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white shadow-sm px-4 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 hover:border-slate-300 sm:px-3 sm:py-1.5">
-        {copied ? <><Check className="h-4 w-4 text-blue-600 sm:h-3.5 sm:w-3.5" /> Copied</> : <><Copy className="h-4 w-4 sm:h-3.5 sm:w-3.5" /> Copy</>}
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white shadow-xs px-3.5 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 hover:border-slate-300">
+        {copied ? <><Check className="h-3.5 w-3.5 text-blue-600" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
       </button>
     </div>
   )
 }
 
-// ── Step 2 — Payment ───────────────────────────────────────────────────────
+// ── Step 2 — Payment Options ────────────────────────────────────────────────
 function Step2({
+  userData,
   onContinue,
   onBack,
 }: {
+  userData: { name: string; email: string; whatsapp: string; totalAmount: number; selectedUpsells: string[] }
   onContinue: () => void
   onBack: () => void
 }) {
+  const upsellLabels: string[] = []
+  if (userData.selectedUpsells?.includes('vault')) upsellLabels.push("AI Cheat Code Vault")
+  if (userData.selectedUpsells?.includes('meta_ads')) upsellLabels.push("Meta Ads Masterclass")
+  const bundleText = upsellLabels.length > 0 ? ` + ${upsellLabels.join(' + ')}` : ''
+
   return (
     <div>
-      <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-700">
-        <Wallet className="h-3.5 w-3.5" /> Step 2 of 3
+      <div className="flex items-center justify-between mb-2">
+        <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-700">
+          <Wallet className="h-3.5 w-3.5" /> Step 2 of 3
+        </div>
+        <span className="rounded-full bg-blue-50 border border-blue-200/80 px-2.5 py-1 text-xs font-black text-blue-700">
+          Rs. {userData.totalAmount.toLocaleString()}
+        </span>
       </div>
-      <h2 className="mt-3 font-['Sora'] text-2xl font-extrabold leading-tight sm:text-3xl"
-        style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+
+      <h2 className="mt-1.5 font-['Sora'] text-xl sm:text-2xl font-extrabold leading-tight text-slate-900">
         Send Your Payment.
       </h2>
-      <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
-        <Lock className="h-3.5 w-3.5 text-blue-600" />
-        Send <strong className="text-slate-800 mx-1">exactly Rs. {COURSE_PRICE.toLocaleString()}</strong> to any account below.
+      <p className="mt-1.5 flex items-center gap-1 text-xs sm:text-sm text-slate-500">
+        <Lock className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+        Send <strong className="text-slate-800 mx-1">exactly Rs. {userData.totalAmount.toLocaleString()}</strong> to any account below:
       </p>
 
-      {/* Social Proof & Trust Header Banner */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200/80 bg-emerald-50/60 p-3 text-xs text-slate-700">
-        <div className="flex items-center gap-1.5 font-medium">
-          <div className="flex text-amber-500">
-            <Star className="h-3.5 w-3.5 fill-amber-400" />
-            <Star className="h-3.5 w-3.5 fill-amber-400" />
-            <Star className="h-3.5 w-3.5 fill-amber-400" />
-            <Star className="h-3.5 w-3.5 fill-amber-400" />
-            <Star className="h-3.5 w-3.5 fill-amber-400" />
-          </div>
-          <span className="font-bold text-slate-900">4.9/5</span>
-          <span className="text-slate-500">(1,120+ Enrolled)</span>
+      {/* Selected Items Notice */}
+      {upsellLabels.length > 0 && (
+        <div className="mt-2.5 rounded-xl border border-blue-200 bg-blue-50/70 p-2.5 text-xs text-blue-900">
+          <span className="font-bold">Includes:</span> AI Video Bootcamp {bundleText}
         </div>
-      </div>
+      )}
 
       {/* Payment Options */}
-      <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 shadow-sm">
+      <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-4 shadow-2xs">
         <BankRow bank="EasyPaisa" title={ACCOUNT_TITLE} num={EASYPAISA_NUMBER} colorClass="text-emerald-600" />
         {JAZZCASH_NUMBER && <BankRow bank="JazzCash" num={JAZZCASH_NUMBER} colorClass="text-rose-600" />}
         {HBL_ACCOUNT && <BankRow bank="HBL (Bank Transfer)" title={ACCOUNT_TITLE} num={HBL_ACCOUNT} colorClass="text-teal-700" />}
       </div>
 
       {/* Direct WhatsApp Support Assistance Button */}
-      <div className="mt-4 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 text-left shadow-sm">
+      <div className="mt-3.5 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-3.5 text-left shadow-2xs">
         <div className="flex items-start gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-600 text-white shadow-md">
-            <MessageCircle className="h-5 w-5" />
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-600 text-white shadow-xs">
+            <MessageCircle className="h-4.5 w-4.5" />
           </div>
           <div className="flex-1">
             <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-900">Having trouble paying or need help?</h4>
@@ -333,31 +476,61 @@ function Step2({
               Our team is online right now to assist you step-by-step on WhatsApp.
             </p>
             <a
-              href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent("Hi! I am on Step 2 (Payment) for the AI Bootcamp and I need help completing my payment.")}`}
+              href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent(`Hi! I am on Step 2 (Payment) for the AI Bootcamp${bundleText} (Rs. ${userData.totalAmount.toLocaleString()}) and I need help completing my payment.`)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2.5 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
+              className="mt-2 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-700"
             >
-              <MessageCircle className="h-4 w-4" /> Facing Issue? Chat on WhatsApp
+              <MessageCircle className="h-3.5 w-3.5" /> Facing Issue? Chat on WhatsApp
             </a>
           </div>
         </div>
       </div>
 
       <button onClick={onContinue}
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.02]"
+        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm sm:text-base font-semibold text-white shadow-[0_4px_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.01] cursor-pointer"
         style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>
-        I&apos;ve Sent the Payment — Continue <ArrowRight className="h-5 w-5" />
+        I&apos;ve Sent the Payment — Continue <ArrowRight className="h-4.5 w-4.5" />
       </button>
       <button onClick={onBack}
-        className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-slate-200 py-2.5 text-xs font-medium text-slate-500 hover:bg-slate-50">
+        className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-slate-200 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 cursor-pointer">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
-      <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+      <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-slate-400">
         <Lock className="h-3.5 w-3.5" /> Secure · One-time payment · Lifetime access
       </p>
     </div>
   )
+}
+
+// ── Util: Compress Image ───────────────────────────────────────────────────
+function compressImageToBase64(file: File, maxWidth = 1200, quality = 0.7): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width)
+          width = maxWidth
+        }
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return reject('No canvas context')
+        ctx.drawImage(img, 0, 0, width, height)
+        const dataUrl = canvas.toDataURL('image/jpeg', quality)
+        resolve(dataUrl.split(',')[1])
+      }
+      img.onerror = reject
+      img.src = e.target?.result as string
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }
 
 // ── Step 3 — Upload Proof ──────────────────────────────────────────────────
@@ -368,9 +541,8 @@ function Step3({
 }: {
   leadId: string
   onBack: () => void
-  userData: { email: string; whatsapp: string }
+  userData: { name: string; email: string; whatsapp: string; totalAmount: number; selectedUpsells: string[] }
 }) {
-  const router = useRouter()
   const [file, setFile]           = useState<File | null>(null)
   const [preview, setPreview]     = useState<string | null>(null)
   const [verifying, setVerifying] = useState(false)
@@ -380,6 +552,11 @@ function Step3({
   const [imageHash, setImageHash] = useState<string | null>(null)
   const [err, setErr]             = useState<string | null>(null)
   const [done, setDone]           = useState(false)
+
+  const upsellLabels: string[] = []
+  if (userData.selectedUpsells?.includes('vault')) upsellLabels.push("AI Cheat Code Vault")
+  if (userData.selectedUpsells?.includes('meta_ads')) upsellLabels.push("Meta Ads Masterclass")
+  const bundleText = upsellLabels.length > 0 ? ` + ${upsellLabels.join(' + ')}` : ''
 
   const handleFile = useCallback(async (f: File | null | undefined) => {
     if (!f) return
@@ -399,7 +576,12 @@ function Step3({
       const res = await fetch('/api/verify-screenshot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileBase64: base64, contentType: f.type, localTime: new Date().toString() }),
+        body: JSON.stringify({
+          fileBase64: base64,
+          contentType: f.type,
+          localTime: new Date().toString(),
+          expectedAmount: userData.totalAmount,
+        }),
       })
       const data = await res.json()
       setVerifyResult(data)
@@ -414,7 +596,7 @@ function Step3({
     } finally {
       setVerifying(false)
     }
-  }, [])
+  }, [userData.totalAmount])
 
   const submit = async () => {
     if (!file || !verified) return
@@ -422,18 +604,20 @@ function Step3({
 
     try {
       const base64 = await compressImageToBase64(file)
-
-      // Generate event_id BEFORE the fetch — same value goes to CAPI (via API body) AND fbq()
       const purchaseEventId = crypto.randomUUID()
 
       const res = await fetch('/api/submit-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          leadId, fileBase64: base64, contentType: 'image/jpeg', fileName: file.name,
-          imageHash, aiResult: verifyResult,
+          leadId,
+          fileBase64: base64,
+          contentType: 'image/jpeg',
+          fileName: file.name,
+          imageHash,
+          aiResult: verifyResult,
           transactionId: (verifyResult as Record<string,unknown>)?.transactionId,
-          amount: (verifyResult as Record<string,unknown>)?.amount,
+          amount: userData.totalAmount,
           recipientNumber: (verifyResult as Record<string,unknown>)?.recipientNumber,
           senderName: (verifyResult as Record<string,unknown>)?.senderName,
           direction: (verifyResult as Record<string,unknown>)?.direction,
@@ -444,19 +628,32 @@ function Step3({
       if (!res.ok) throw new Error(data.error)
 
       if (typeof window !== 'undefined' && (window as any).fbq) {
-        (window as any).fbq('track', 'Purchase', { value: COURSE_PRICE, currency: 'PKR' }, { eventID: purchaseEventId });
+        (window as any).fbq('track', 'Purchase', { value: userData.totalAmount, currency: 'PKR' }, { eventID: purchaseEventId })
       }
 
-      // Google Ads Purchase conversion — user_data set atomically inside gtagSafe
-      gtagSafe(
-        {
-          send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL}`,
-          value: COURSE_PRICE,
-          currency: 'PKR',
-          transaction_id: (verifyResult as Record<string,unknown>)?.transactionId || purchaseEventId,
-        },
-        { email: userData.email, phone: userData.whatsapp }
-      )
+      if (process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL) {
+        gtagSafe(
+          {
+            send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL}`,
+            value: userData.totalAmount,
+            currency: 'PKR',
+            transaction_id: (verifyResult as Record<string,unknown>)?.transactionId || purchaseEventId,
+          },
+          { email: userData.email, phone: userData.whatsapp }
+        )
+      }
+
+      fireGA4Event('purchase', {
+        transaction_id: (verifyResult as Record<string,unknown>)?.transactionId || purchaseEventId,
+        value: userData.totalAmount,
+        currency: 'PKR',
+        items: [{
+          item_id: 'ai-bootcamp-pk',
+          item_name: 'AI Video Bootcamp Pakistan',
+          price: userData.totalAmount,
+          quantity: 1,
+        }],
+      })
 
       setDone(true)
     } catch (e: unknown) {
@@ -477,9 +674,9 @@ function Step3({
           You&apos;re In!
         </h2>
         <p className="mt-3 text-sm text-slate-800 font-semibold leading-relaxed max-w-sm mx-auto">
-          Payment screenshot received! Message us on WhatsApp now — we&apos;ll send you the final student form there so you can complete your enrollment.
+          Payment screenshot received! Message us on WhatsApp now — we&apos;ll send you the final student form and your course access.
         </p>
-        <a href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent(`Hi! I've submitted my payment for the AI Bootcamp. My name is [Your Name]. Please confirm my enrollment.`)}`}
+        <a href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent(`Hi! I've submitted my payment of Rs. ${userData.totalAmount.toLocaleString()} for the AI Video Bootcamp${bundleText}.\nName: ${userData.name || 'Student'}\nEmail: ${userData.email || ''}\nWhatsApp: ${userData.whatsapp || ''}\n\nPlease confirm my enrollment.`)}`}
           target="_blank" rel="noopener noreferrer"
           className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-4 text-base font-semibold text-white shadow-lg transition-transform hover:scale-[1.02]">
           <MessageCircle className="h-5 w-5" />
@@ -491,19 +688,24 @@ function Step3({
 
   return (
     <div>
-      <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-700">
-        <Upload className="h-3.5 w-3.5" /> Step 3 of 3
+      <div className="flex items-center justify-between mb-2">
+        <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-700">
+          <Upload className="h-3.5 w-3.5" /> Step 3 of 3
+        </div>
+        <span className="rounded-full bg-blue-50 border border-blue-200/80 px-2.5 py-1 text-xs font-black text-blue-700">
+          Rs. {userData.totalAmount.toLocaleString()}
+        </span>
       </div>
-      <h2 className="mt-3 font-[&#39;Sora&#39;] text-2xl font-extrabold leading-tight sm:text-3xl"
-        style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+
+      <h2 className="mt-1.5 font-['Sora'] text-xl sm:text-2xl font-extrabold leading-tight text-slate-900">
         Upload Payment Screenshot.
       </h2>
-      <p className="mt-2 text-sm text-slate-500">
-        Upload a clear screenshot of your Rs. {COURSE_PRICE.toLocaleString()} payment. Image only, max 5MB.
+      <p className="mt-1.5 text-xs sm:text-sm text-slate-500">
+        Upload a clear screenshot of your Rs. {userData.totalAmount.toLocaleString()} payment. Image only, max 5MB.
       </p>
 
       {/* Drop zone */}
-      <label className="mt-5 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center transition hover:border-blue-400 hover:bg-blue-50/40">
+      <label className="mt-4 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center transition hover:border-blue-400 hover:bg-blue-50/40">
         {preview
           ? <img src={preview} alt="Preview" className="max-h-48 rounded-lg object-contain" />
           : <>
@@ -549,7 +751,7 @@ function Step3({
       )}
 
       <button onClick={submit} disabled={submitting || !verified}
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-[0_4px_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.01] disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
         style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>
         {submitting
           ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Uploading…</>
@@ -557,7 +759,7 @@ function Step3({
       </button>
 
       <a
-        href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent("Hi! I am on Step 3 (Upload Proof) for the AI Bootcamp and I need help uploading or verifying my payment screenshot.")}`}
+        href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent(`Hi! I am on Step 3 (Upload Proof) for the AI Bootcamp${bundleText} and I need help uploading or verifying my payment screenshot.`)}`}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-2.5 flex items-center justify-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 py-2.5 px-4 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100/90"
@@ -566,59 +768,34 @@ function Step3({
       </a>
 
       <button onClick={onBack}
-        className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-slate-200 py-2.5 text-xs font-medium text-slate-500 hover:bg-slate-50">
+        className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-slate-200 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 cursor-pointer">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
 
-      <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+      <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-slate-400">
         <Shield className="h-3.5 w-3.5" /> Your screenshot is encrypted and stored securely.
       </p>
     </div>
   )
 }
 
-// ── Util ───────────────────────────────────────────────────────────────────
-function compressImageToBase64(file: File, maxWidth = 1200, quality = 0.7): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        let width = img.width
-        let height = img.height
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width)
-          width = maxWidth
-        }
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return reject('No canvas context')
-        ctx.drawImage(img, 0, 0, width, height)
-        const dataUrl = canvas.toDataURL('image/jpeg', quality)
-        resolve(dataUrl.split(',')[1])
-      }
-      img.onerror = reject
-      img.src = e.target?.result as string
-    }
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
 // ── Main Enroll Page ───────────────────────────────────────────────────────
 export default function EnrollPage() {
   const [step, setStep]   = useState(1)
   const [leadId, setLeadId] = useState<string | null>(null)
-  const [userData, setUserDataState] = useState<{ email: string; whatsapp: string }>({ email: '', whatsapp: '' })
+  const [userData, setUserDataState] = useState<{
+    name: string
+    email: string
+    whatsapp: string
+    totalAmount: number
+    selectedUpsells: string[]
+  }>({ name: '', email: '', whatsapp: '', totalAmount: BASE_PRICE, selectedUpsells: [] })
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       if ((window as any).fbq) {
         (window as any).fbq('track', 'InitiateCheckout')
       }
-      // Also capture source on direct enroll page visits
       const params = new URLSearchParams(window.location.search)
       const utm = params.get('utm_source') || params.get('ref')
       const gclid = params.get('gclid')
@@ -660,35 +837,35 @@ export default function EnrollPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-slate-800">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/85 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      {/* Universal Top Header */}
+      <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 sm:px-6 sm:py-3">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="grid h-9 w-9 place-items-center rounded-xl font-bold text-sm text-white" style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>AI</div>
+            <div className="grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-xl font-bold text-xs sm:text-sm text-white shadow-xs" style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>AI</div>
             <div className="leading-tight">
-              <div className="text-sm font-bold tracking-tight sm:text-base">AI Bootcamp</div>
-              <div className="-mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600">Pakistan</div>
+              <div className="text-xs sm:text-base font-bold tracking-tight text-slate-900">AI Bootcamp</div>
+              <div className="-mt-0.5 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600">Pakistan</div>
             </div>
           </Link>
-          <Link href="/" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
-            <ArrowLeft className="h-4 w-4" /> Back to Course
+          <Link href="/" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition shadow-2xs">
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Course
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 py-4 sm:px-6 sm:py-8">
+      <main className="mx-auto max-w-lg px-3.5 py-3 sm:px-6 sm:py-6">
         {/* Checkout card */}
-        <div className="overflow-hidden rounded-2xl border border-blue-200/60 bg-white shadow-[0_0_40px_rgba(37,99,235,0.1)]">
+        <div className="overflow-hidden rounded-2xl border border-blue-200/60 bg-white shadow-[0_0_40px_rgba(37,99,235,0.08)]">
           {/* Card header bar */}
-          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-2.5">
+          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-2">
             <div className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full bg-blue-500/80" />
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-              <span className="h-2.5 w-2.5 rounded-full bg-cyan-400" />
+              <span className="h-2 w-2 rounded-full bg-blue-500" />
+              <span className="h-2 w-2 rounded-full bg-amber-400" />
+              <span className="h-2 w-2 rounded-full bg-cyan-400" />
             </div>
-            <div className="text-xs font-medium text-slate-500">Enroll · Step {step} of 3</div>
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-600">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600" /> Live
+            <div className="text-xs font-medium text-slate-600">Enroll · Step {step} of 3</div>
+            <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/50">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" /> Live
             </div>
           </div>
 
@@ -698,26 +875,37 @@ export default function EnrollPage() {
             {step === 1 && (
               <Step1 onDone={(id, data) => {
                 setLeadId(id)
-                setUserDataState({ email: data.email, whatsapp: data.whatsapp })
+                setUserDataState({
+                  name: data.name,
+                  email: data.email,
+                  whatsapp: data.whatsapp,
+                  totalAmount: data.totalAmount,
+                  selectedUpsells: data.selectedUpsells,
+                })
                 setStep(2)
               }} />
             )}
             {step === 2 && (
               <Step2
+                userData={userData}
                 onContinue={() => setStep(3)}
                 onBack={() => setStep(1)}
               />
             )}
             {step === 3 && leadId && (
-              <Step3 leadId={leadId} onBack={() => setStep(2)} userData={userData} />
+              <Step3
+                leadId={leadId}
+                userData={userData}
+                onBack={() => setStep(2)}
+              />
             )}
           </div>
         </div>
 
         {/* FAQ teaser */}
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3.5 text-xs text-slate-600 shadow-2xs">
           <div className="font-semibold text-slate-800">Questions?</div>
-          <p className="mt-1 text-xs">
+          <p className="mt-1 text-slate-500 text-[11px]">
             Email us at <a href="mailto:aivideoboootcamp@gmail.com" className="font-semibold text-blue-600 hover:underline">aivideoboootcamp@gmail.com</a>, WhatsApp us at{' '}
             <a href={`https://wa.me/${WHATSAPP_SUPPORT}`} target="_blank" rel="noopener noreferrer"
               className="font-semibold text-blue-600 hover:underline">
@@ -730,8 +918,8 @@ export default function EnrollPage() {
 
       {/* WhatsApp floating */}
       <a href={`https://wa.me/${WHATSAPP_SUPPORT}`} target="_blank" rel="noopener noreferrer"
-        className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform hover:scale-110">
-        <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+        className="fixed bottom-4 right-4 z-40 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform hover:scale-110">
+        <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 sm:h-6 sm:w-6">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 5.834h-.004c-1.271-.05-2.521-.349-3.67-.877l-.263-.119-2.727.716.73-2.66-.172-.273a7.53 7.53 0 0 1-1.16-4.03c0-4.188 3.406-7.592 7.594-7.592 4.188 0 7.592 3.404 7.592 7.592 0 4.188-3.404 7.593-7.592 7.593m6.743-13.831c-1.807-1.808-4.209-2.804-6.765-2.804-5.27 0-9.56 4.29-9.56 9.56 0 1.683.439 3.321 1.271 4.762l-1.351 4.94 5.051-1.324a9.55 9.55 0 0 0 4.589 1.173c5.27 0 9.56-4.29 9.56-9.56 0-2.556-.996-4.958-2.795-6.767" />
         </svg>
       </a>

@@ -13,18 +13,19 @@ const VALID_RECIPIENT_NUMBERS = [
   process.env.NEXT_PUBLIC_HBL_ACCOUNT ?? '',
 ].filter(Boolean)
 
-const COURSE_PRICE = parseInt(process.env.COURSE_PRICE ?? '1999')
-const PRICE_TOLERANCE_LOW = COURSE_PRICE - 150    // e.g. 1849
-const PRICE_TOLERANCE_HIGH = COURSE_PRICE + 500   // e.g. 2499
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { fileBase64, contentType, localTime } = body
+    const { fileBase64, contentType, localTime, expectedAmount } = body
 
     if (!fileBase64 || !contentType?.startsWith('image/')) {
       return NextResponse.json({ valid: false, reason: 'Invalid file type.' })
     }
+
+    const defaultPrice = parseInt(process.env.COURSE_PRICE ?? '1999')
+    const targetPrice = Number(expectedAmount) || defaultPrice
+    const toleranceLow = Math.max(1800, targetPrice - 150)
+    const toleranceHigh = Math.max(4500, targetPrice + 500)
 
     // ── Layer 1: SHA-256 duplicate check ──────────────────────────────────
     const imageBuffer = Buffer.from(fileBase64, 'base64')
@@ -45,12 +46,11 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Layer 2: Gemini Flash Vision AI Verification ──────────────────────
-    // ── Layer 2: Gemini Flash Vision AI Verification ──────────────────────
     const prompt = `You are a payment verification system for a Pakistani online course.
 Analyze this payment screenshot and extract the following information as JSON.
 
 RULES:
-- Look for Pakistani mobile payment apps: EasyPaisa, JazzCash, Sadapay, Nayapay
+- Look for Pakistani mobile payment apps: EasyPaisa, JazzCash, Sadapay, Nayapay, or Bank Transfer apps
 - Identify the direction: was money SENT or RECEIVED by the screenshot owner
 - Extract the recipient account number (the TO field)
 - Extract the exact amount transferred
@@ -72,14 +72,15 @@ Return ONLY valid JSON, no markdown, no explanation:
   "reason": "brief explanation if invalid, null if valid"
 }
 
+Expected amount is around PKR ${targetPrice}.
 Submitted at local time: ${localTime}`
 
     const FALLBACK_MODELS = [
+      'gemini-2.5-flash',
       'gemini-3.7-flash',
       'gemini-3.6-flash',
       'gemini-3.5-flash',
       'gemini-3.1-flash-lite',
-      'gemini-2.5-flash',
       'gemini-flash-latest'
     ]
 
@@ -130,14 +131,14 @@ Submitted at local time: ${localTime}`
       recipientNormalized.includes(n.replace(/\s|-/g, ''))
     )
     if (aiResult.recipient_number && !recipientValid) {
-      validationErrors.push(`Payment was sent to wrong account (${aiResult.recipient_number}). Please send to the correct EasyPaisa number.`)
+      validationErrors.push(`Payment was sent to wrong account (${aiResult.recipient_number}). Please send to the correct EasyPaisa/JazzCash number.`)
     }
 
     // Amount must be within tolerance
     if (aiResult.amount !== null && aiResult.amount !== undefined) {
-      if (aiResult.amount < PRICE_TOLERANCE_LOW) {
-        validationErrors.push(`Amount Rs. ${aiResult.amount} is less than required Rs. ${COURSE_PRICE}. Please send the correct amount.`)
-      } else if (aiResult.amount > PRICE_TOLERANCE_HIGH) {
+      if (aiResult.amount < toleranceLow) {
+        validationErrors.push(`Amount Rs. ${aiResult.amount} is less than required Rs. ${targetPrice}. Please send the correct amount.`)
+      } else if (aiResult.amount > toleranceHigh) {
         validationErrors.push(`Amount Rs. ${aiResult.amount} seems too high. Please contact us on WhatsApp.`)
       }
     }
