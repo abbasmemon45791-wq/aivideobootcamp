@@ -173,19 +173,21 @@ function Step1({ onDone }: { onDone: (leadId: string, data: { name: string; emai
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
-      if (typeof window !== 'undefined' && (window as any).fbq) {
-        (window as any).fbq('track', 'Lead', {}, { eventID: leadEventId });
-      }
+      if (!data.existing) {
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+          (window as any).fbq('track', 'Lead', {}, { eventID: leadEventId });
+        }
 
-      // Google Ads Lead conversion — user_data set atomically inside gtagSafe
-      gtagSafe(
-        {
-          send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_LEAD_LABEL}`,
-          value: COURSE_PRICE,
-          currency: 'PKR',
-        },
-        { email: email.trim().toLowerCase(), phone: wa.trim() }
-      )
+        // Google Ads Lead conversion — user_data set atomically inside gtagSafe
+        gtagSafe(
+          {
+            send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_LEAD_LABEL}`,
+            value: COURSE_PRICE,
+            currency: 'PKR',
+          },
+          { email: email.trim().toLowerCase(), phone: wa.trim() }
+        )
+      }
 
       onDone(data.id, { name: name.trim(), email: email.trim().toLowerCase(), whatsapp: wa.trim() })
     } catch (e: unknown) {
@@ -451,7 +453,7 @@ function Step3({
           send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL}`,
           value: COURSE_PRICE,
           currency: 'PKR',
-          transaction_id: (verifyResult as Record<string,unknown>)?.transactionId ?? '',
+          transaction_id: (verifyResult as Record<string,unknown>)?.transactionId || purchaseEventId,
         },
         { email: userData.email, phone: userData.whatsapp }
       )

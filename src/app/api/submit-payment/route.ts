@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     // Send Facebook CAPI Purchase Event
     try {
-      const PIXEL_ID = '2170349516868440'
+      const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || process.env.NEXT_PUBLIC_FB_PIXEL_ID || '2170349516868440'
       const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
       if (PIXEL_ID && ACCESS_TOKEN && lead.email && lead.whatsapp) {
         const hashedEmail = hashData(lead.email.toLowerCase().trim())
@@ -111,14 +111,12 @@ export async function POST(req: NextRequest) {
                 event_time: Math.floor(Date.now() / 1000),
                 action_source: 'website',
                 event_source_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aivideobootcamp.vercel.app'}/enroll`,
-                // event_id matches the browser fbq() call — Meta deduplicates automatically
                 ...(eventId && { event_id: eventId }),
                 user_data: {
                   em: [hashedEmail],
                   ...(hashedPhone && { ph: [hashedPhone] }),
                   client_ip_address: ip,
                   client_user_agent: req.headers.get('user-agent') ?? '',
-                  // _fbc/_fbp cookies — highest-quality signal for matching CAPI events to ad clicks
                   ...(fbc && { fbc }),
                   ...(fbp && { fbp }),
                 },
@@ -129,7 +127,7 @@ export async function POST(req: NextRequest) {
               }
             ]
           })
-        })
+        }).catch(err => console.error('FB CAPI Error (Purchase):', err))
       }
     } catch (fbErr) {
       console.error('FB CAPI Error (Purchase):', fbErr)
