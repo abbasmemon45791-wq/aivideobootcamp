@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import crypto from 'crypto'
-
-const hashData = (data: string) => crypto.createHash('sha256').update(data).digest('hex')
+import { hashEmailForMeta, hashPhoneForMeta } from '@/lib/tracking'
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,6 +38,7 @@ export async function POST(req: NextRequest) {
     const matchAmount = lead?.utm_content?.match(/\[amount:(\d+)\]/)
     const fallbackAmount = matchAmount ? Number(matchAmount[1]) : (Number(process.env.COURSE_PRICE) || 1999)
     const finalAmount = Number(amount) || fallbackAmount
+    const wasAlreadySubmitted = lead.status === 'payment_submitted' || lead.status === 'approved'
 
     // Upload screenshot to Supabase Storage if fileBase64 provided
     let screenshotUrl: string | undefined
@@ -109,55 +108,56 @@ export async function POST(req: NextRequest) {
       .update({ status: 'payment_submitted' })
       .eq('id', leadId)
 
-    // Send Facebook CAPI Purchase Event
-    try {
-      const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || process.env.NEXT_PUBLIC_FB_PIXEL_ID || '2170349516868440'
-      const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
-      if (PIXEL_ID && ACCESS_TOKEN && lead.email && lead.whatsapp) {
-        const hashedEmail = hashData(lead.email.toLowerCase().trim())
-        const digitsOnly = lead.whatsapp.replace(/\D/g, '')
-        const hashedPhone = digitsOnly ? hashData(digitsOnly) : undefined
-        
-        const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? req.headers.get('x-real-ip') ?? 'unknown'
+    // Send Facebook CAPI Purchase Event only if not already submitted
+    if (!wasAlreadySubmitted) {
+      try {
+        const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || process.env.NEXT_PUBLIC_FB_PIXEL_ID || '2170349516868440'
+        const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
+        if (PIXEL_ID && ACCESS_TOKEN && lead.email) {
+          const hashedEmail = hashEmailForMeta(lead.email)
+          const hashedPhone = hashPhoneForMeta(lead.whatsapp)
+          
+          const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? req.headers.get('x-real-ip') ?? 'unknown'
 
-        // Extract Meta browser cookies for CAPI signal quality
-        const cookieHeader = req.headers.get('cookie') ?? ''
-        const fbc = cookieHeader.match(/_fbc=([^;]+)/)?.[1]
-        const fbp = cookieHeader.match(/_fbp=([^;]+)/)?.[1]
+          // Extract Meta browser cookies for CAPI signal quality
+          const cookieHeader = req.headers.get('cookie') ?? ''
+          const fbc = cookieHeader.match(/_fbc=([^;]+)/)?.[1]
+          const fbp = cookieHeader.match(/_fbp=([^;]+)/)?.[1]
 
-        await fetch(`https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            data: [
-              {
-                event_name: 'Purchase',
-                event_time: Math.floor(Date.now() / 1000),
-                action_source: 'website',
-                event_source_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aivideobootcamp.vercel.app'}/enroll`,
-                ...(eventId && { event_id: eventId }),
-                user_data: {
-                  em: [hashedEmail],
-                  ...(hashedPhone && { ph: [hashedPhone] }),
-                  client_ip_address: ip,
-                  client_user_agent: req.headers.get('user-agent') ?? '',
-                  ...(fbc && { fbc }),
-                  ...(fbp && { fbp }),
-                },
-                custom_data: {
-                  currency: 'PKR',
-                  value: finalAmount,
+          await fetch(`https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              data: [
+                {
+                  event_name: 'Purchase',
+                  event_time: Math.floor(Date.now() / 1000),
+                  action_source: 'website',
+                  event_source_url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aivideobootcamp.vercel.app'}/enroll`,
+                  ...(eventId && { event_id: eventId }),
+                  user_data: {
+                    em: [hashedEmail],
+                    ...(hashedPhone && { ph: [hashedPhone] }),
+                    client_ip_address: ip,
+                    client_user_agent: req.headers.get('user-agent') ?? '',
+                    ...(fbc && { fbc }),
+                    ...(fbp && { fbp }),
+                  },
+                  custom_data: {
+                    currency: 'PKR',
+                    value: finalAmount,
+                  }
                 }
-              }
-            ]
-          })
-        }).catch(err => console.error('FB CAPI Error (Purchase):', err))
+              ]
+            })
+          }).catch(err => console.error('FB CAPI Error (Purchase):', err))
+        }
+      } catch (fbErr) {
+        console.error('FB CAPI Error (Purchase):', fbErr)
       }
-    } catch (fbErr) {
-      console.error('FB CAPI Error (Purchase):', fbErr)
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, alreadyTracked: wasAlreadySubmitted })
   } catch (err) {
     console.error('[POST /api/submit-payment]', err)
     return NextResponse.json({ error: 'Submission failed. Please try again.' }, { status: 500 })

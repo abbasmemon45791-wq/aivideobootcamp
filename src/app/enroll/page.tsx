@@ -505,30 +505,39 @@ function Step2({
 
 // ── Util: Compress Image ───────────────────────────────────────────────────
 function compressImageToBase64(file: File, maxWidth = 1200, quality = 0.7): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const reader = new FileReader()
     reader.onload = (e) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        let width = img.width
-        let height = img.height
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width)
-          width = maxWidth
+      const rawBase64 = ((e.target?.result as string) || '').split(',')[1] || ''
+      try {
+        const img = new Image()
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas')
+            let width = img.width
+            let height = img.height
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width)
+              width = maxWidth
+            }
+            canvas.width = width
+            canvas.height = height
+            const ctx = canvas.getContext('2d')
+            if (!ctx) return resolve(rawBase64)
+            ctx.drawImage(img, 0, 0, width, height)
+            const dataUrl = canvas.toDataURL('image/jpeg', quality)
+            resolve(dataUrl.split(',')[1] || rawBase64)
+          } catch {
+            resolve(rawBase64)
+          }
         }
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return reject('No canvas context')
-        ctx.drawImage(img, 0, 0, width, height)
-        const dataUrl = canvas.toDataURL('image/jpeg', quality)
-        resolve(dataUrl.split(',')[1])
+        img.onerror = () => resolve(rawBase64)
+        img.src = e.target?.result as string
+      } catch {
+        resolve(rawBase64)
       }
-      img.onerror = reject
-      img.src = e.target?.result as string
     }
-    reader.onerror = reject
+    reader.onerror = () => resolve('')
     reader.readAsDataURL(file)
   })
 }
@@ -564,8 +573,8 @@ function Step3({
 
     if (!f.type.startsWith('image/'))
       return setErr('Please upload an image file (PNG, JPG, etc.)')
-    if (f.size > 5 * 1024 * 1024)
-      return setErr('Image must be under 5MB.')
+    if (f.size > 10 * 1024 * 1024)
+      return setErr('Image must be under 10MB.')
 
     setFile(f)
     setPreview(URL.createObjectURL(f))
@@ -578,28 +587,32 @@ function Step3({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fileBase64: base64,
-          contentType: f.type,
+          contentType: f.type || 'image/jpeg',
           localTime: new Date().toString(),
           expectedAmount: userData.totalAmount,
         }),
       })
       const data = await res.json()
       setVerifyResult(data)
+      setImageHash(data.imageHash || null)
+
       if (data.valid) {
         setVerified(true)
-        setImageHash(data.imageHash)
+        setErr(null)
       } else {
-        setErr(data.reason ?? 'Screenshot could not be verified. Please upload a clear, unedited screenshot from your EasyPaisa/JazzCash app.')
+        setVerified(false)
+        setErr(data.reason ?? 'Screenshot could not be auto-verified by AI.')
       }
     } catch {
-      setErr('Verification failed. Please try again or contact support.')
+      setVerified(false)
+      setErr('Auto-verification check is busy. You can submit your screenshot directly for instant manual approval.')
     } finally {
       setVerifying(false)
     }
   }, [userData.totalAmount])
 
   const submit = async () => {
-    if (!file || !verified) return
+    if (!file) return
     setSubmitting(true); setErr(null)
 
     try {
@@ -627,33 +640,37 @@ function Step3({
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
-      if (typeof window !== 'undefined' && (window as any).fbq) {
-        (window as any).fbq('track', 'Purchase', { value: userData.totalAmount, currency: 'PKR' }, { eventID: purchaseEventId })
-      }
+      const finalPrice = Number(userData.totalAmount) || 1999
 
-      if (process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL) {
-        gtagSafe(
-          {
-            send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL}`,
-            value: userData.totalAmount,
-            currency: 'PKR',
-            transaction_id: (verifyResult as Record<string,unknown>)?.transactionId || purchaseEventId,
-          },
-          { email: userData.email, phone: userData.whatsapp }
-        )
-      }
+      if (!data.alreadyTracked) {
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+          (window as any).fbq('track', 'Purchase', { value: finalPrice, currency: 'PKR' }, { eventID: purchaseEventId })
+        }
 
-      fireGA4Event('purchase', {
-        transaction_id: (verifyResult as Record<string,unknown>)?.transactionId || purchaseEventId,
-        value: userData.totalAmount,
-        currency: 'PKR',
-        items: [{
-          item_id: 'ai-bootcamp-pk',
-          item_name: 'AI Video Bootcamp Pakistan',
-          price: userData.totalAmount,
-          quantity: 1,
-        }],
-      })
+        if (process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL) {
+          gtagSafe(
+            {
+              send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL}`,
+              value: finalPrice,
+              currency: 'PKR',
+              transaction_id: (verifyResult as Record<string,unknown>)?.transactionId || purchaseEventId,
+            },
+            { email: userData.email, phone: userData.whatsapp }
+          )
+        }
+
+        fireGA4Event('purchase', {
+          transaction_id: (verifyResult as Record<string,unknown>)?.transactionId || purchaseEventId,
+          value: finalPrice,
+          currency: 'PKR',
+          items: [{
+            item_id: 'ai-bootcamp-pk',
+            item_name: 'AI Video Bootcamp Pakistan',
+            price: finalPrice,
+            quantity: 1,
+          }],
+        })
+      }
 
       setDone(true)
     } catch (e: unknown) {
@@ -701,7 +718,7 @@ function Step3({
         Upload Payment Screenshot.
       </h2>
       <p className="mt-1.5 text-xs sm:text-sm text-slate-500">
-        Upload a clear screenshot of your Rs. {userData.totalAmount.toLocaleString()} payment. Image only, max 5MB.
+        Upload a clear screenshot of your Rs. {userData.totalAmount.toLocaleString()} payment (EasyPaisa / JazzCash / Bank Transfer).
       </p>
 
       {/* Drop zone */}
@@ -711,7 +728,7 @@ function Step3({
           : <>
               <ImageIcon className="h-8 w-8 text-slate-300" />
               <div className="text-sm font-medium text-slate-600">Tap to choose screenshot</div>
-              <div className="text-xs text-slate-400">PNG or JPG · up to 5MB</div>
+              <div className="text-xs text-slate-400">PNG, JPG, HEIC · up to 10MB</div>
             </>}
         <input type="file" accept="image/*" className="hidden" onChange={e => handleFile(e.target.files?.[0])} />
       </label>
@@ -720,42 +737,52 @@ function Step3({
 
       {/* Verifying */}
       {verifying && (
-        <div className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
-          <LoaderCircle className="h-4 w-4 animate-spin text-blue-600" /> Verifying payment screenshot with AI…
+        <div className="mt-3 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/60 px-3 py-2.5 text-xs font-medium text-blue-800">
+          <LoaderCircle className="h-4 w-4 animate-spin text-blue-600" /> Scanning payment receipt with AI…
         </div>
       )}
 
-      {/* Verified */}
+      {/* Verified Successfully */}
       {verified && !verifying && (
-        <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
-          <CheckCircle className="h-4 w-4" /> Payment screenshot verified ✓
+        <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-700">
+          <CheckCircle className="h-4 w-4" /> Receipt verified successfully ✓
         </div>
       )}
 
-      {/* Error */}
-      {err && !verifying && (
-        <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+      {/* Inconclusive or Manual Review Fallback */}
+      {!verified && file && !verifying && (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3 text-xs text-amber-900">
           <div className="flex items-start gap-2">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{err}</span>
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <div className="space-y-1">
+              <div className="font-semibold text-amber-900">{err || 'Receipt details couldn’t be automatically scanned.'}</div>
+              <div className="text-slate-600 leading-relaxed">
+                No problem! Click <strong>&quot;Submit for Manual Review&quot;</strong> below and our team will verify your receipt and grant your access.
+              </div>
+            </div>
           </div>
-          <a href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent('My payment screenshot is being rejected. Can you verify manually?')}`}
-            target="_blank" rel="noopener noreferrer"
-            className="mt-2 flex items-center gap-1.5 font-semibold text-emerald-600 hover:underline">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 5.834h-.004c-1.271-.05-2.521-.349-3.67-.877l-.263-.119-2.727.716.73-2.66-.172-.273a7.53 7.53 0 0 1-1.16-4.03c0-4.188 3.406-7.592 7.594-7.592 4.188 0 7.592 3.404 7.592 7.592 0 4.188-3.404 7.593-7.592 7.593m6.743-13.831c-1.807-1.808-4.209-2.804-6.765-2.804-5.27 0-9.56 4.29-9.56 9.56 0 1.683.439 3.321 1.271 4.762l-1.351 4.94 5.051-1.324a9.55 9.55 0 0 0 4.589 1.173c5.27 0 9.56-4.29 9.56-9.56 0-2.556-.996-4.958-2.795-6.767" />
-            </svg>
-            Screenshot issue? Get verified manually on WhatsApp
-          </a>
         </div>
       )}
 
-      <button onClick={submit} disabled={submitting || !verified}
-        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-[0_4px_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.01] disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
-        style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>
-        {submitting
-          ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Uploading…</>
-          : <><Upload className="h-4 w-4" /> Submit Payment Proof</>}
+      {/* Submit Button - Always active once a file is selected */}
+      <button
+        onClick={submit}
+        disabled={submitting || !file || verifying}
+        className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-[0_4px_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.01] disabled:opacity-50 disabled:hover:scale-100 cursor-pointer ${
+          verified
+            ? 'bg-gradient-to-r from-blue-600 to-cyan-500'
+            : 'bg-gradient-to-r from-blue-700 to-indigo-600'
+        }`}
+      >
+        {submitting ? (
+          <><LoaderCircle className="h-4 w-4 animate-spin" /> Uploading Receipt…</>
+        ) : verified ? (
+          <><Check className="h-4 w-4" /> Submit Payment Proof &amp; Get Access</>
+        ) : file ? (
+          <><Upload className="h-4 w-4" /> Submit Proof for Manual Review</>
+        ) : (
+          <><Upload className="h-4 w-4" /> Select Screenshot to Continue</>
+        )}
       </button>
 
       <a
@@ -778,6 +805,7 @@ function Step3({
     </div>
   )
 }
+
 
 // ── Main Enroll Page ───────────────────────────────────────────────────────
 export default function EnrollPage() {

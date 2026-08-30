@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import crypto from 'crypto'
-
-const hashData = (data: string) => crypto.createHash('sha256').update(data).digest('hex')
+import { hashEmailForMeta, hashPhoneForMeta } from '@/lib/tracking'
 
 export async function POST(req: NextRequest) {
   try {
@@ -112,11 +110,9 @@ export async function POST(req: NextRequest) {
     try {
       const PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || process.env.NEXT_PUBLIC_META_PIXEL_ID || '2170349516868440'
       const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
-      if (PIXEL_ID && ACCESS_TOKEN) {
-        const hashedEmail = hashData(email.toLowerCase().trim())
-        // Extract only digits for phone hash per FB specs (include country code, no + or -)
-        const digitsOnly = whatsapp.replace(/\D/g, '')
-        const hashedPhone = digitsOnly ? hashData(digitsOnly) : undefined
+      if (PIXEL_ID && ACCESS_TOKEN && email) {
+        const hashedEmail = hashEmailForMeta(email)
+        const hashedPhone = hashPhoneForMeta(whatsapp)
         
         await fetch(`https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`, {
           method: 'POST',

@@ -6,12 +6,20 @@ import type { VerificationResult } from '@/types'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
-// Your EasyPaisa / JazzCash / HBL account numbers
+// Your EasyPaisa / JazzCash / HBL account numbers, titles, and suffixes
 const VALID_RECIPIENT_NUMBERS = [
-  process.env.NEXT_PUBLIC_EASYPAISA_NUMBER ?? '',
-  process.env.NEXT_PUBLIC_JAZZCASH_NUMBER ?? '',
-  process.env.NEXT_PUBLIC_HBL_ACCOUNT ?? '',
+  process.env.NEXT_PUBLIC_EASYPAISA_NUMBER ?? '03458996578',
+  process.env.NEXT_PUBLIC_JAZZCASH_NUMBER ?? '03180236635',
+  process.env.NEXT_PUBLIC_HBL_ACCOUNT ?? '22567902223303',
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '923180298090',
+  '03458996578',
+  '03180236635',
+  '22567902223303',
+  '03180298090',
 ].filter(Boolean)
+
+const VALID_DIGIT_SUFFIXES = ['6578', '6635', '3303', '8090']
+const VALID_TITLES = ['farman', 'ali', 'techpulse', 'tech pulse']
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,13 +27,13 @@ export async function POST(req: NextRequest) {
     const { fileBase64, contentType, localTime, expectedAmount } = body
 
     if (!fileBase64 || !contentType?.startsWith('image/')) {
-      return NextResponse.json({ valid: false, reason: 'Invalid file type.' })
+      return NextResponse.json({ valid: false, allowManualSubmission: true, reason: 'Invalid file type.' })
     }
 
     const defaultPrice = parseInt(process.env.COURSE_PRICE ?? '1999')
     const targetPrice = Number(expectedAmount) || defaultPrice
-    const toleranceLow = Math.max(1800, targetPrice - 150)
-    const toleranceHigh = Math.max(4500, targetPrice + 500)
+    const toleranceLow = Math.min(1800, targetPrice - 200)
+    const toleranceHigh = Math.max(5000, targetPrice + 1000)
 
     // ── Layer 1: SHA-256 duplicate check ──────────────────────────────────
     const imageBuffer = Buffer.from(fileBase64, 'base64')
@@ -40,6 +48,7 @@ export async function POST(req: NextRequest) {
     if (dupCheck) {
       return NextResponse.json({
         valid: false,
+        allowManualSubmission: false,
         reason: 'This screenshot has already been submitted. Please send a fresh payment and upload the new receipt.',
         duplicate: true,
       })
@@ -50,18 +59,18 @@ export async function POST(req: NextRequest) {
 Analyze this payment screenshot and extract the following information as JSON.
 
 RULES:
-- Look for Pakistani mobile payment apps: EasyPaisa, JazzCash, Sadapay, Nayapay, or Bank Transfer apps
+- Look for Pakistani mobile payment apps: EasyPaisa, JazzCash, Sadapay, Nayapay, Bank Transfer apps, or Raast
 - Identify the direction: was money SENT or RECEIVED by the screenshot owner
-- Extract the recipient account number (the TO field)
+- Extract the recipient account number OR recipient name/title (the TO field, e.g. Farman Ali or phone number)
 - Extract the exact amount transferred
 - Extract the transaction ID or reference number
 - Extract the timestamp of the transaction
-- Determine if this is a genuine payment receipt. You MUST rigorously check for signs of manipulation, photo editing, text-overlay, AI generation, or if it is a screenshot of a screenshot. If it looks fake, tampered with, or AI generated, set valid to false and provide a reason.
+- Determine if this is a genuine payment receipt. Check if it is a successful transfer receipt.
 
 Return ONLY valid JSON, no markdown, no explanation:
 {
   "valid": boolean,
-  "platform": "easypaisa" | "jazzcash" | "sadapay" | "nayapay" | "bank_transfer" | "unknown",
+  "platform": "easypaisa" | "jazzcash" | "sadapay" | "nayapay" | "bank_transfer" | "raast" | "unknown",
   "direction": "sent" | "received" | "unknown",
   "recipient_number": "string or null",
   "sender_name": "string or null",
@@ -75,17 +84,16 @@ Return ONLY valid JSON, no markdown, no explanation:
 Expected amount is around PKR ${targetPrice}.
 Submitted at local time: ${localTime}`
 
+    // Official production Gemini models
     const FALLBACK_MODELS = [
-      'gemini-2.5-flash',
-      'gemini-3.7-flash',
-      'gemini-3.6-flash',
-      'gemini-3.5-flash',
-      'gemini-3.1-flash-lite',
-      'gemini-flash-latest'
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-2.0-flash',
+      'gemini-1.5-pro'
     ]
 
-    let result;
-    let lastError;
+    let result
+    let lastError
     
     for (const modelName of FALLBACK_MODELS) {
       try {
@@ -94,15 +102,23 @@ Submitted at local time: ${localTime}`
           prompt,
           { inlineData: { mimeType: contentType, data: fileBase64 } },
         ])
-        break; // Success!
+        if (result?.response?.text()) {
+          break // Success!
+        }
       } catch (e) {
-        console.warn(`Model ${modelName} failed, trying next...`)
+        console.warn(`Model ${modelName} failed, trying next...`, e)
         lastError = e
       }
     }
 
     if (!result) {
-      throw lastError || new Error("All Gemini models are currently unavailable.")
+      console.error('[AI Verification] All Gemini models failed:', lastError)
+      return NextResponse.json({
+        valid: false,
+        allowManualSubmission: true,
+        imageHash,
+        reason: 'Automatic AI check is currently busy. You can submit your screenshot directly for quick manual approval by our team.',
+      })
     }
 
     let aiResult: VerificationResult
@@ -113,7 +129,9 @@ Submitted at local time: ${localTime}`
     } catch {
       return NextResponse.json({
         valid: false,
-        reason: 'Could not read the screenshot. Please upload a clear, unedited screenshot.',
+        allowManualSubmission: true,
+        imageHash,
+        reason: 'Could not automatically scan the screenshot text. You can submit it for manual review.',
       })
     }
 
@@ -125,33 +143,47 @@ Submitted at local time: ${localTime}`
       validationErrors.push('This screenshot shows money being received, not sent.')
     }
 
-    // Recipient number must match your account
-    const recipientNormalized = aiResult.recipient_number?.replace(/\s|-/g, '') ?? ''
-    const recipientValid = VALID_RECIPIENT_NUMBERS.some(n => 
-      recipientNormalized.includes(n.replace(/\s|-/g, ''))
-    )
-    if (aiResult.recipient_number && !recipientValid) {
-      validationErrors.push(`Payment was sent to wrong account (${aiResult.recipient_number}). Please send to the correct EasyPaisa/JazzCash number.`)
+    // Recipient check: accepts full phone number, account title (Farman Ali), or last 4 digits (6578/6635/3303)
+    const recipientRaw = (aiResult.recipient_number || '').toLowerCase().trim()
+    const recipientDigits = recipientRaw.replace(/\D/g, '')
+
+    let recipientValid = false
+    if (!recipientRaw) {
+      // Some bank apps only show reference ID and no recipient text - allow manual submission fallback
+      recipientValid = true
+    } else {
+      const matchesFull = VALID_RECIPIENT_NUMBERS.some(n => {
+        const cleanN = n.replace(/\D/g, '')
+        return cleanN && (recipientDigits.includes(cleanN) || cleanN.includes(recipientDigits))
+      })
+      const matchesSuffix = VALID_DIGIT_SUFFIXES.some(suffix => recipientDigits.includes(suffix))
+      const matchesTitle = VALID_TITLES.some(title => recipientRaw.includes(title))
+
+      recipientValid = matchesFull || matchesSuffix || matchesTitle
     }
 
-    // Amount must be within tolerance
+    if (recipientRaw && !recipientValid) {
+      validationErrors.push(`Payment recipient (${aiResult.recipient_number}) does not match our account (Farman Ali / 03458996578).`)
+    }
+
+    // Amount validation
     if (aiResult.amount !== null && aiResult.amount !== undefined) {
       if (aiResult.amount < toleranceLow) {
-        validationErrors.push(`Amount Rs. ${aiResult.amount} is less than required Rs. ${targetPrice}. Please send the correct amount.`)
+        validationErrors.push(`Amount Rs. ${aiResult.amount} is less than required Rs. ${targetPrice}.`)
       } else if (aiResult.amount > toleranceHigh) {
-        validationErrors.push(`Amount Rs. ${aiResult.amount} seems too high. Please contact us on WhatsApp.`)
+        validationErrors.push(`Amount Rs. ${aiResult.amount} seems higher than expected.`)
       }
     }
 
-    // Payment must be successful
+    // Payment status check
     if (aiResult.status === 'failed') {
-      validationErrors.push('This transaction shows as failed. Please complete the payment and upload a successful receipt.')
+      validationErrors.push('This transaction shows as failed. Please upload a completed receipt.')
     }
     if (aiResult.status === 'pending') {
-      validationErrors.push('This transaction is still pending. Please wait for it to complete and then upload the receipt.')
+      validationErrors.push('This transaction is still pending in your payment app.')
     }
 
-    // Check transaction ID for duplicates (in addition to image hash)
+    // Check transaction ID for duplicates
     if (aiResult.transaction_id) {
       const { data: txDup } = await supabaseAdmin
         .from('payments')
@@ -160,7 +192,7 @@ Submitted at local time: ${localTime}`
         .maybeSingle()
 
       if (txDup) {
-        validationErrors.push('This transaction ID has already been used. Please contact us on WhatsApp if you think this is an error.')
+        validationErrors.push('This transaction ID has already been used on our system.')
       }
     }
 
@@ -168,6 +200,7 @@ Submitted at local time: ${localTime}`
 
     return NextResponse.json({
       valid: isValid,
+      allowManualSubmission: true,
       imageHash,
       aiResult,
       senderName: aiResult.sender_name,
@@ -183,7 +216,8 @@ Submitted at local time: ${localTime}`
     console.error('[POST /api/verify-screenshot]', err)
     return NextResponse.json({
       valid: false,
-      reason: err instanceof Error ? `System Error: ${err.message}` : 'Verification failed. Please try again or contact support.',
-    }, { status: 500 })
+      allowManualSubmission: true,
+      reason: 'Could not auto-verify image. You can submit for manual team approval.',
+    }, { status: 200 })
   }
 }

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import crypto from 'crypto'
-
-const hashData = (data: string) => crypto.createHash('sha256').update(data).digest('hex')
+import { hashData, hashEmailForMeta, hashPhoneForMeta } from '@/lib/tracking'
 
 // ── Admin auth ─────────────────────────────────────────────────────────────
 function getAdminToken(req: NextRequest) {
@@ -86,7 +84,7 @@ export async function POST(req: NextRequest) {
   const { leadId, paymentId, action, note } = body
   // action: 'approve' | 'reject'
 
-  if (!leadId || !action) {
+  if (!leadId || !action || !['approve', 'reject'].includes(action)) {
     return NextResponse.json({ error: 'Missing leadId or action.' }, { status: 400 })
   }
 
@@ -100,6 +98,7 @@ export async function POST(req: NextRequest) {
     .maybeSingle()
 
   const wasAlreadyApproved = lead?.status === 'approved'
+  const wasPaymentSubmitted = lead?.status === 'payment_submitted'
 
   // Update lead status
   await supabaseAdmin
@@ -155,8 +154,10 @@ export async function POST(req: NextRequest) {
       })
   }
 
-  // ── Fire conversion events only on FIRST-TIME APPROVE ─────────────────────
-  if (action === 'approve' && lead && !wasAlreadyApproved) {
+  // ── Fire conversion events ONLY if not already fired upon screenshot submission ──
+  // If the student already uploaded a screenshot (wasPaymentSubmitted), the Purchase was
+  // already tracked at submission time. Firing again here would double-count!
+  if (action === 'approve' && lead && !wasAlreadyApproved && !wasPaymentSubmitted) {
     const transactionId = `lead_${leadId}_${Date.now()}`
 
     // ── 1. GA4 Measurement Protocol (server-side) ─────────────────────────
@@ -230,9 +231,8 @@ export async function POST(req: NextRequest) {
       const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
 
       if (PIXEL_ID && ACCESS_TOKEN && lead.email) {
-        const hashedEmail = hashData(lead.email.toLowerCase().trim())
-        const digitsOnly  = lead.whatsapp?.replace(/\D/g, '')
-        const hashedPhone = digitsOnly ? hashData(digitsOnly) : undefined
+        const hashedEmail = hashEmailForMeta(lead.email)
+        const hashedPhone = hashPhoneForMeta(lead.whatsapp)
 
         await fetch(
           `https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`,
@@ -243,7 +243,7 @@ export async function POST(req: NextRequest) {
               data: [{
                 event_name:        'Purchase',
                 event_time:        Math.floor(Date.now() / 1000),
-                action_source:     'other',
+                action_source:     'website',
                 event_source_url:  `${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/enroll`,
                 event_id:          transactionId,
                 user_data: {
