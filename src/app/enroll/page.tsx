@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, ArrowRight, User, Wallet, Upload, Check,
   Lock, LoaderCircle, Copy, Shield, Image as ImageIcon,
-  AlertCircle, CheckCircle, MessageCircle, Star, Sparkles
+  AlertCircle, CheckCircle, MessageCircle, Star, Sparkles,
+  XCircle, CameraOff, FileCheck
 } from 'lucide-react'
 
 const BASE_PRICE = 1999
@@ -557,9 +558,12 @@ function Step3({
   const [verifying, setVerifying] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [verified, setVerified]   = useState(false)
+  const [allowManual, setAllowManual] = useState(false)
+  const [rejectionCode, setRejectionCode] = useState<string | null>(null)
   const [verifyResult, setVerifyResult] = useState<Record<string, unknown> | null>(null)
   const [imageHash, setImageHash] = useState<string | null>(null)
   const [err, setErr]             = useState<string | null>(null)
+  const [urduErr, setUrduErr]     = useState<string | null>(null)
   const [done, setDone]           = useState(false)
 
   const upsellLabels: string[] = []
@@ -569,12 +573,23 @@ function Step3({
 
   const handleFile = useCallback(async (f: File | null | undefined) => {
     if (!f) return
-    setErr(null); setVerified(false); setVerifyResult(null); setImageHash(null); setPreview(null)
+    setErr(null)
+    setUrduErr(null)
+    setVerified(false)
+    setAllowManual(false)
+    setRejectionCode(null)
+    setVerifyResult(null)
+    setImageHash(null)
+    setPreview(null)
 
-    if (!f.type.startsWith('image/'))
-      return setErr('Please upload an image file (PNG, JPG, etc.)')
-    if (f.size > 10 * 1024 * 1024)
-      return setErr('Image must be under 10MB.')
+    if (!f.type.startsWith('image/')) {
+      setErr('Please upload an image file (PNG, JPG, etc.)')
+      return
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      setErr('Image must be under 10MB.')
+      return
+    }
 
     setFile(f)
     setPreview(URL.createObjectURL(f))
@@ -595,25 +610,31 @@ function Step3({
       const data = await res.json()
       setVerifyResult(data)
       setImageHash(data.imageHash || null)
+      setRejectionCode(data.rejection_code || null)
+      setAllowManual(Boolean(data.allowManualSubmission))
 
       if (data.valid) {
         setVerified(true)
         setErr(null)
+        setUrduErr(null)
       } else {
         setVerified(false)
         setErr(data.reason ?? 'Screenshot could not be auto-verified by AI.')
+        setUrduErr(data.urdu_reason ?? null)
       }
     } catch {
       setVerified(false)
+      setAllowManual(true)
       setErr('Auto-verification check is busy. You can submit your screenshot directly for instant manual approval.')
+      setUrduErr('سسٹم مصروف ہے۔ آپ دستی تصدیق کے لیے جمع کروا سکتے ہیں۔')
     } finally {
       setVerifying(false)
     }
   }, [userData.totalAmount])
 
   const submit = async () => {
-    if (!file) return
-    setSubmitting(true); setErr(null)
+    if (!file || (!verified && !allowManual)) return
+    setSubmitting(true); setErr(null); setUrduErr(null)
 
     try {
       const base64 = await compressImageToBase64(file)
@@ -703,6 +724,9 @@ function Step3({
     )
   }
 
+  const isHardRejected = !verified && file && !verifying && !allowManual
+  const isSelfie = rejectionCode === 'SELFIE_DETECTED'
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -715,62 +739,146 @@ function Step3({
       </div>
 
       <h2 className="mt-1.5 font-['Sora'] text-xl sm:text-2xl font-extrabold leading-tight text-slate-900">
-        Upload Payment Screenshot.
+        Upload Payment Screenshot
       </h2>
-      <p className="mt-1.5 text-xs sm:text-sm text-slate-500">
-        Upload a clear screenshot of your Rs. {userData.totalAmount.toLocaleString()} payment (EasyPaisa / JazzCash / Bank Transfer).
+      <p className="mt-1 text-xs sm:text-sm text-slate-500">
+        Upload the transfer receipt of <strong className="text-slate-800">Rs. {userData.totalAmount.toLocaleString()}</strong> from EasyPaisa, JazzCash, or your Bank App.
       </p>
 
-      {/* Drop zone */}
-      <label className="mt-4 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center transition hover:border-blue-400 hover:bg-blue-50/40">
+      {/* ── Visual Upload Guidelines Box ──────────────────────────────────── */}
+      <div className="mt-3.5 space-y-2">
+        {/* Valid item example */}
+        <div className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/70 p-2.5 text-xs text-emerald-900">
+          <FileCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+          <div>
+            <span className="font-bold">What to upload:</span> Screenshot of Successful Transfer from EasyPaisa / JazzCash / Bank app saved in your Gallery.
+          </div>
+        </div>
+
+        {/* Warning: No Selfies / Photos */}
+        <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/70 p-2.5 text-xs text-rose-900">
+          <CameraOff className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+          <div className="space-y-0.5">
+            <div>
+              <span className="font-bold text-rose-700">DO NOT upload selfies or personal photos.</span>
+            </div>
+            <div className="text-[11px] font-medium text-rose-800" dir="rtl">
+              براہ کرم اپنی تصویر یا سیلفی مت لگائیں — صرف پیمنٹ رسید (Screenshot) لگائیں۔
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Drop / Select zone ────────────────────────────────────────────── */}
+      <label className={`mt-3.5 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center transition ${
+        isHardRejected
+          ? 'border-rose-300 bg-rose-50/40 hover:border-rose-400'
+          : verified
+          ? 'border-emerald-300 bg-emerald-50/30 hover:border-emerald-400'
+          : 'border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50/40'
+      }`}>
         {preview
-          ? <img src={preview} alt="Preview" className="max-h-48 rounded-lg object-contain" />
+          ? <img src={preview} alt="Preview" className="max-h-44 rounded-lg object-contain border border-slate-200" />
           : <>
-              <ImageIcon className="h-8 w-8 text-slate-300" />
-              <div className="text-sm font-medium text-slate-600">Tap to choose screenshot</div>
+              <div className="grid h-12 w-12 place-items-center rounded-full bg-blue-50 text-blue-600">
+                <ImageIcon className="h-6 w-6" />
+              </div>
+              <div className="text-sm font-bold text-slate-700">Choose Screenshot from Gallery</div>
               <div className="text-xs text-slate-400">PNG, JPG, HEIC · up to 10MB</div>
             </>}
-        <input type="file" accept="image/*" className="hidden" onChange={e => handleFile(e.target.files?.[0])} />
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={e => handleFile(e.target.files?.[0])}
+        />
       </label>
 
-      {file && <div className="mt-2 truncate text-xs text-slate-400">Selected: <span className="text-slate-600">{file.name}</span></div>}
+      {file && (
+        <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+          <span className="truncate max-w-[200px]">Selected: <strong className="text-slate-700">{file.name}</strong></span>
+          <label className="text-blue-600 font-semibold cursor-pointer hover:underline">
+            Change Photo
+            <input type="file" accept="image/*" className="hidden" onChange={e => handleFile(e.target.files?.[0])} />
+          </label>
+        </div>
+      )}
 
-      {/* Verifying */}
+      {/* ── State: Scanning with AI ──────────────────────────────────────── */}
       {verifying && (
-        <div className="mt-3 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/60 px-3 py-2.5 text-xs font-medium text-blue-800">
-          <LoaderCircle className="h-4 w-4 animate-spin text-blue-600" /> Scanning payment receipt with AI…
+        <div className="mt-3 flex items-center gap-2.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-3 text-xs font-semibold text-blue-800 shadow-2xs">
+          <LoaderCircle className="h-4 w-4 animate-spin text-blue-600 shrink-0" />
+          <span>Scanning payment receipt with AI…</span>
         </div>
       )}
 
-      {/* Verified Successfully */}
+      {/* ── State: Verified Successfully ─────────────────────────────────── */}
       {verified && !verifying && (
-        <div className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-700">
-          <CheckCircle className="h-4 w-4" /> Receipt verified successfully ✓
+        <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900 shadow-2xs">
+          <div className="flex items-center gap-2 font-bold text-emerald-800">
+            <CheckCircle className="h-4 w-4 text-emerald-600" />
+            Receipt Verified Successfully ✓
+          </div>
+          {Boolean((verifyResult as any)?.transaction_id) && (
+            <div className="mt-1 text-[11px] text-emerald-700">
+              TRX ID: <span className="font-mono font-semibold">{(verifyResult as any).transaction_id}</span>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Inconclusive or Manual Review Fallback */}
-      {!verified && file && !verifying && (
+      {/* ── State: HARD REJECTION (Selfie / Non-Receipt) ──────────────────── */}
+      {isHardRejected && (
+        <div className="mt-3 rounded-xl border-2 border-rose-300 bg-rose-50 p-3.5 text-xs text-rose-900 shadow-2xs">
+          <div className="flex items-start gap-2.5">
+            <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" />
+            <div className="space-y-1.5 flex-1">
+              <div className="font-extrabold text-rose-900 text-sm">
+                {isSelfie ? 'Selfie / Personal Photo Detected ❌' : 'Not a Payment Receipt ❌'}
+              </div>
+              <div className="text-slate-700 leading-snug">
+                {err || 'Please upload a screenshot of your payment transfer from EasyPaisa or JazzCash.'}
+              </div>
+              {urduErr && (
+                <div className="rounded-lg bg-white/80 p-2 font-bold text-rose-900 text-xs border border-rose-200" dir="rtl">
+                  {urduErr}
+                </div>
+              )}
+              <label className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 font-bold text-white shadow-xs hover:bg-rose-700 cursor-pointer transition">
+                <Upload className="h-3.5 w-3.5" />
+                Select Payment Slip from Gallery
+                <input type="file" accept="image/*" className="hidden" onChange={e => handleFile(e.target.files?.[0])} />
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── State: Soft Review Fallback (Real slip, minor scan blur) ──────── */}
+      {!verified && file && !verifying && allowManual && (
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3 text-xs text-amber-900">
           <div className="flex items-start gap-2">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
             <div className="space-y-1">
               <div className="font-semibold text-amber-900">{err || 'Receipt details couldn’t be automatically scanned.'}</div>
-              <div className="text-slate-600 leading-relaxed">
-                No problem! Click <strong>&quot;Submit for Manual Review&quot;</strong> below and our team will verify your receipt and grant your access.
+              {urduErr && <div className="text-[11px] font-medium text-amber-800" dir="rtl">{urduErr}</div>}
+              <div className="text-slate-600 leading-relaxed pt-0.5">
+                No problem! Click <strong>&quot;Submit for Manual Review&quot;</strong> below and our team will verify your slip and grant your access.
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Submit Button - Always active once a file is selected */}
+      {/* ── Submit Button ────────────────────────────────────────────────── */}
       <button
         onClick={submit}
-        disabled={submitting || !file || verifying}
-        className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-[0_4px_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.01] disabled:opacity-50 disabled:hover:scale-100 cursor-pointer ${
+        disabled={submitting || !file || verifying || (!verified && !allowManual)}
+        className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-[0_4px_20px_rgba(37,99,235,0.3)] transition-all hover:scale-[1.01] disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed cursor-pointer ${
           verified
             ? 'bg-gradient-to-r from-blue-600 to-cyan-500'
+            : isHardRejected
+            ? 'bg-slate-400'
             : 'bg-gradient-to-r from-blue-700 to-indigo-600'
         }`}
       >
@@ -778,13 +886,16 @@ function Step3({
           <><LoaderCircle className="h-4 w-4 animate-spin" /> Uploading Receipt…</>
         ) : verified ? (
           <><Check className="h-4 w-4" /> Submit Payment Proof &amp; Get Access</>
-        ) : file ? (
+        ) : isHardRejected ? (
+          <><XCircle className="h-4 w-4" /> Please Upload Payment Receipt to Continue</>
+        ) : file && allowManual ? (
           <><Upload className="h-4 w-4" /> Submit Proof for Manual Review</>
         ) : (
           <><Upload className="h-4 w-4" /> Select Screenshot to Continue</>
         )}
       </button>
 
+      {/* WhatsApp Help */}
       <a
         href={`https://wa.me/${WHATSAPP_SUPPORT}?text=${encodeURIComponent(`Hi! I am on Step 3 (Upload Proof) for the AI Bootcamp${bundleText} and I need help uploading or verifying my payment screenshot.`)}`}
         target="_blank"

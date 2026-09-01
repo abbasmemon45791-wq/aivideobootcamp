@@ -40,15 +40,21 @@ export interface LeadWithPayment extends Lead {
 
 export interface VerificationResult {
   valid: boolean
+  image_type?: 'payment_receipt' | 'selfie_or_face' | 'id_card_or_document' | 'random_photo' | 'other'
+  is_payment_receipt?: boolean
+  is_human_photo?: boolean
+  rejection_code?: 'SELFIE_DETECTED' | 'NOT_A_RECEIPT' | 'WRONG_RECIPIENT' | 'INVALID_AMOUNT' | 'DUPLICATE_TX' | 'FAILED_TRANSACTION' | 'OTHER'
   recipient_number?: string
   amount?: number
   transaction_id?: string
   sender_name?: string
   direction?: 'sent' | 'received' | 'unknown'
   status?: string
-  platform?: 'easypaisa' | 'jazzcash' | 'bank_transfer' | 'sadapay' | 'unknown'
+  platform?: 'easypaisa' | 'jazzcash' | 'bank_transfer' | 'sadapay' | 'nayapay' | 'raast' | 'unknown'
   date_time?: string
   reason?: string
+  urdu_reason?: string
+  allowManualSubmission?: boolean
 }
 
 export interface EnrollFormData {

@@ -35,6 +35,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Lead not found.' }, { status: 404 })
     }
 
+    // Prevent submission of selfies or non-receipt images
+    if (
+      aiResult?.is_human_photo ||
+      aiResult?.image_type === 'selfie_or_face' ||
+      aiResult?.rejection_code === 'SELFIE_DETECTED'
+    ) {
+      return NextResponse.json({
+        error: 'Personal photo / selfie detected. Please upload your EasyPaisa, JazzCash, or Bank payment transfer receipt.',
+      }, { status: 400 })
+    }
+
+    if (
+      aiResult?.image_type === 'random_photo' ||
+      aiResult?.image_type === 'id_card_or_document' ||
+      aiResult?.rejection_code === 'NOT_A_RECEIPT'
+    ) {
+      return NextResponse.json({
+        error: 'The uploaded file is not a payment receipt. Please upload your transaction screenshot.',
+      }, { status: 400 })
+    }
+
     const matchAmount = lead?.utm_content?.match(/\[amount:(\d+)\]/)
     const fallbackAmount = matchAmount ? Number(matchAmount[1]) : (Number(process.env.COURSE_PRICE) || 1999)
     const finalAmount = Number(amount) || fallbackAmount

@@ -55,20 +55,31 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Layer 2: Gemini Flash Vision AI Verification ──────────────────────
-    const prompt = `You are a payment verification system for a Pakistani online course.
-Analyze this payment screenshot and extract the following information as JSON.
+    const prompt = `You are an automated payment verification system for a Pakistani online course.
+Analyze this uploaded image carefully and extract structured information as JSON.
 
-RULES:
-- Look for Pakistani mobile payment apps: EasyPaisa, JazzCash, Sadapay, Nayapay, Bank Transfer apps, or Raast
+CRITICAL FIRST CHECK (IMAGE CLASSIFICATION):
+- Determine what type of image this is:
+  1. "payment_receipt": An actual mobile wallet / banking app transaction receipt (EasyPaisa, JazzCash, Sadapay, Nayapay, Bank Transfer, Raast, ATM slip, etc.) showing money transferred.
+  2. "selfie_or_face": A selfie, portrait, photograph of a human face/person, camera selfie, avatar, or passport-style photo.
+  3. "id_card_or_document": A CNIC, ID card, driving license, passport, certificate, or non-payment document.
+  4. "random_photo": A nature photo, meme, screenshot of chats, wallpaper, car, building, or irrelevant picture.
+  5. "other": Anything else not matching above.
+
+RULES FOR PAYMENT RECEIPTS:
+- Look for Pakistani mobile payment apps: EasyPaisa, JazzCash, Sadapay, Nayapay, Bank Transfer apps (HBL, Meezan, Alfalah, etc.), or Raast
 - Identify the direction: was money SENT or RECEIVED by the screenshot owner
 - Extract the recipient account number OR recipient name/title (the TO field, e.g. Farman Ali or phone number)
-- Extract the exact amount transferred
-- Extract the transaction ID or reference number
+- Extract the exact amount transferred (e.g. 1999, 2498, 3497, etc.)
+- Extract the transaction ID / reference number / TRX ID / TID
 - Extract the timestamp of the transaction
-- Determine if this is a genuine payment receipt. Check if it is a successful transfer receipt.
+- Determine if this is a genuine successful payment receipt
 
-Return ONLY valid JSON, no markdown, no explanation:
+Return ONLY valid JSON without markdown code fences or explanation:
 {
+  "image_type": "payment_receipt" | "selfie_or_face" | "id_card_or_document" | "random_photo" | "other",
+  "is_human_photo": boolean,
+  "is_payment_receipt": boolean,
   "valid": boolean,
   "platform": "easypaisa" | "jazzcash" | "sadapay" | "nayapay" | "bank_transfer" | "raast" | "unknown",
   "direction": "sent" | "received" | "unknown",
@@ -84,11 +95,11 @@ Return ONLY valid JSON, no markdown, no explanation:
 Expected amount is around PKR ${targetPrice}.
 Submitted at local time: ${localTime}`
 
-    // Official production Gemini models
+    // Production Gemini models in priority order
     const FALLBACK_MODELS = [
       'gemini-1.5-flash',
-      'gemini-1.5-flash-latest',
       'gemini-2.0-flash',
+      'gemini-1.5-flash-8b',
       'gemini-1.5-pro'
     ]
 
@@ -118,6 +129,7 @@ Submitted at local time: ${localTime}`
         allowManualSubmission: true,
         imageHash,
         reason: 'Automatic AI check is currently busy. You can submit your screenshot directly for quick manual approval by our team.',
+        urdu_reason: 'آٹومیٹک اسکیننگ سسٹم مصروف ہے۔ آپ دستی تصدیق کے لیے جمع کروا سکتے ہیں۔',
       })
     }
 
@@ -132,15 +144,57 @@ Submitted at local time: ${localTime}`
         allowManualSubmission: true,
         imageHash,
         reason: 'Could not automatically scan the screenshot text. You can submit it for manual review.',
+        urdu_reason: 'اسکرین شاٹ کا متن خودکار طریقے سے نہیں پڑھا جا سکا۔ آپ دستی تصدیق کے لیے بھیج سکتے ہیں۔',
       })
     }
 
-    // ── Layer 3: Business Rule Validation ─────────────────────────────────
+    // ── Layer 3: Image Classification Checks ─────────────────────────────
+    // HARD REJECTION: Selfies, Face Photos, Personal Pictures
+    if (aiResult.is_human_photo || aiResult.image_type === 'selfie_or_face') {
+      return NextResponse.json({
+        valid: false,
+        allowManualSubmission: false,
+        imageHash,
+        image_type: 'selfie_or_face',
+        rejection_code: 'SELFIE_DETECTED',
+        reason: 'Personal photo / selfie detected. Please do NOT upload personal photos. Please upload your EasyPaisa, JazzCash, or Bank payment transfer screenshot from your gallery.',
+        urdu_reason: 'یہ آپ کی ذاتی تصویر/سیلفی ہے۔ براہ کرم اپنی تصویر مت لگائیں — ایزی پیسہ یا جاز کیش سے فیس بھیجنے کے بعد آنے والی رسید کا اسکرین شاٹ لگائیں۔',
+      })
+    }
+
+    // HARD REJECTION: ID Cards, Documents, Random Photos
+    if (aiResult.image_type === 'id_card_or_document') {
+      return NextResponse.json({
+        valid: false,
+        allowManualSubmission: false,
+        imageHash,
+        image_type: 'id_card_or_document',
+        rejection_code: 'NOT_A_RECEIPT',
+        reason: 'Identity card or document detected. Please upload your payment transfer receipt (EasyPaisa / JazzCash / Bank slip).',
+        urdu_reason: 'شناختی کارڈ یا دستاویز نہیں چلے گی۔ براہ کرم پیمنٹ ٹرانسفر کی رسید لگائیں۔',
+      })
+    }
+
+    if (aiResult.image_type === 'random_photo' || (aiResult.is_payment_receipt === false && !aiResult.valid)) {
+      return NextResponse.json({
+        valid: false,
+        allowManualSubmission: false,
+        imageHash,
+        image_type: 'random_photo',
+        rejection_code: 'NOT_A_RECEIPT',
+        reason: 'The uploaded image is not a payment receipt. Please upload a clear screenshot of your EasyPaisa, JazzCash, or Bank transfer.',
+        urdu_reason: 'یہ تصویر ادائیگی کی رسید نہیں ہے۔ براہ کرم اپنی فیس ٹرانسفر کا واضح اسکرین شاٹ اپلوڈ کریں۔',
+      })
+    }
+
+    // ── Layer 4: Business Rule Validation for Payment Receipts ────────────
     const validationErrors: string[] = []
+    let urduReason = ''
 
     // Must be a SENT transaction (not received)
     if (aiResult.direction === 'received') {
       validationErrors.push('This screenshot shows money being received, not sent.')
+      urduReason = 'یہ اسکرین شاٹ رقم موصول ہونے کا ہے، بھیجنے کا نہیں۔'
     }
 
     // Recipient check: accepts full phone number, account title (Farman Ali), or last 4 digits (6578/6635/3303)
@@ -164,12 +218,14 @@ Submitted at local time: ${localTime}`
 
     if (recipientRaw && !recipientValid) {
       validationErrors.push(`Payment recipient (${aiResult.recipient_number}) does not match our account (Farman Ali / 03458996578).`)
+      urduReason = `رقم ہمارے اکاؤنٹ (Farman Ali / 03458996578) پر منتقل نہیں کی گئی۔`
     }
 
     // Amount validation
     if (aiResult.amount !== null && aiResult.amount !== undefined) {
       if (aiResult.amount < toleranceLow) {
         validationErrors.push(`Amount Rs. ${aiResult.amount} is less than required Rs. ${targetPrice}.`)
+        urduReason = `رقم (Rs. ${aiResult.amount}) مطلوبہ فیس (Rs. ${targetPrice}) سے کم ہے۔`
       } else if (aiResult.amount > toleranceHigh) {
         validationErrors.push(`Amount Rs. ${aiResult.amount} seems higher than expected.`)
       }
@@ -178,9 +234,11 @@ Submitted at local time: ${localTime}`
     // Payment status check
     if (aiResult.status === 'failed') {
       validationErrors.push('This transaction shows as failed. Please upload a completed receipt.')
+      urduReason = 'یہ ٹرانزیکشن ناکام (Failed) ہو چکی ہے۔ براہ کرم کامیاب رسید لگائیں۔'
     }
     if (aiResult.status === 'pending') {
       validationErrors.push('This transaction is still pending in your payment app.')
+      urduReason = 'یہ ٹرانزیکشن ابھی پینڈنگ (Pending) ہے۔'
     }
 
     // Check transaction ID for duplicates
@@ -193,6 +251,7 @@ Submitted at local time: ${localTime}`
 
       if (txDup) {
         validationErrors.push('This transaction ID has already been used on our system.')
+        urduReason = 'یہ ٹرانزیکشن آئی ڈی پہلے ہی استعمال ہو چکی ہے۔'
       }
     }
 
@@ -202,12 +261,16 @@ Submitted at local time: ${localTime}`
       valid: isValid,
       allowManualSubmission: true,
       imageHash,
+      image_type: aiResult.image_type || 'payment_receipt',
+      is_human_photo: aiResult.is_human_photo ?? false,
+      is_payment_receipt: aiResult.is_payment_receipt ?? true,
       aiResult,
       senderName: aiResult.sender_name,
       amount: aiResult.amount,
       transactionId: aiResult.transaction_id,
       recipientNumber: aiResult.recipient_number,
       direction: aiResult.direction,
+      urdu_reason: urduReason || (!isValid ? aiResult.urdu_reason : undefined),
       reason: validationErrors.length > 0
         ? validationErrors[0]
         : (!isValid ? aiResult.reason : null),
@@ -218,6 +281,7 @@ Submitted at local time: ${localTime}`
       valid: false,
       allowManualSubmission: true,
       reason: 'Could not auto-verify image. You can submit for manual team approval.',
+      urdu_reason: 'تصویر خودکار طریقے سے اسکین نہیں ہو سکی۔ آپ مینوئل ریویو کے لیے بھیج سکتے ہیں۔',
     }, { status: 200 })
   }
 }
