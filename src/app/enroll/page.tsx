@@ -487,6 +487,12 @@ function Step2({
         {HBL_ACCOUNT && <BankRow bank="HBL (Bank Transfer)" title={ACCOUNT_TITLE} num={HBL_ACCOUNT} colorClass="text-teal-700" />}
       </div>
 
+      <button onClick={handleContinue}
+        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm sm:text-base font-semibold text-white shadow-[0_4px_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.01] cursor-pointer"
+        style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>
+        I&apos;ve Sent the Payment — Continue <ArrowRight className="h-4.5 w-4.5" />
+      </button>
+
       {/* Direct WhatsApp Support Assistance Button */}
       <div className="mt-3.5 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-3.5 text-left shadow-2xs">
         <div className="flex items-start gap-3">
@@ -509,12 +515,6 @@ function Step2({
           </div>
         </div>
       </div>
-
-      <button onClick={handleContinue}
-        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm sm:text-base font-semibold text-white shadow-[0_4px_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.01] cursor-pointer"
-        style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>
-        I&apos;ve Sent the Payment — Continue <ArrowRight className="h-4.5 w-4.5" />
-      </button>
       <button onClick={onBack}
         className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-slate-200 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 cursor-pointer">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
