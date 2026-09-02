@@ -182,10 +182,11 @@ function Step1({ onDone }: {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'Lead', { value: totalAmount, currency: 'PKR' }, { eventID: leadEventId })
+      }
+
       if (!data.existing) {
-        if (typeof window !== 'undefined' && (window as any).fbq) {
-          (window as any).fbq('track', 'Lead', { value: totalAmount, currency: 'PKR' }, { eventID: leadEventId })
-        }
 
         // Google Ads Lead conversion
         if (process.env.NEXT_PUBLIC_GA_LEAD_LABEL) {
@@ -427,6 +428,27 @@ function Step2({
   onContinue: () => void
   onBack: () => void
 }) {
+  // Fire 2nd Lead event when Step 2 renders
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'Lead', {
+        value: userData.totalAmount,
+        currency: 'PKR',
+      })
+    }
+  }, [userData.totalAmount])
+
+  const handleContinue = () => {
+    // Fire 1st InitiateCheckout event on Step 2 submit
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'InitiateCheckout', {
+        value: userData.totalAmount,
+        currency: 'PKR',
+      })
+    }
+    onContinue()
+  }
+
   const upsellLabels: string[] = []
   if (userData.selectedUpsells?.includes('vault')) upsellLabels.push("AI Cheat Code Vault")
   if (userData.selectedUpsells?.includes('meta_ads')) upsellLabels.push("Meta Ads Masterclass")
@@ -488,7 +510,7 @@ function Step2({
         </div>
       </div>
 
-      <button onClick={onContinue}
+      <button onClick={handleContinue}
         className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm sm:text-base font-semibold text-white shadow-[0_4px_20px_rgba(37,99,235,0.3)] transition-transform hover:scale-[1.01] cursor-pointer"
         style={{ background: 'linear-gradient(135deg,#2563eb,#06b6d4)' }}>
         I&apos;ve Sent the Payment — Continue <ArrowRight className="h-4.5 w-4.5" />
@@ -565,6 +587,16 @@ function Step3({
   const [err, setErr]             = useState<string | null>(null)
   const [urduErr, setUrduErr]     = useState<string | null>(null)
   const [done, setDone]           = useState(false)
+
+  // Fire 2nd InitiateCheckout event when Step 3 renders
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'InitiateCheckout', {
+        value: userData.totalAmount,
+        currency: 'PKR',
+      })
+    }
+  }, [userData.totalAmount])
 
   const upsellLabels: string[] = []
   if (userData.selectedUpsells?.includes('vault')) upsellLabels.push("AI Cheat Code Vault")
@@ -933,7 +965,11 @@ export default function EnrollPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       if ((window as any).fbq) {
-        (window as any).fbq('track', 'InitiateCheckout')
+        (window as any).fbq('track', 'AddToCart', {
+          value: BASE_PRICE,
+          currency: 'PKR',
+          content_name: 'AI Video Bootcamp',
+        })
       }
       const params = new URLSearchParams(window.location.search)
       const utm = params.get('utm_source') || params.get('ref')

@@ -472,6 +472,16 @@ export default function HomePage() {
   const [headerScrolled, setHeaderScrolled] = useState(false)
   const enrollRef = useRef<HTMLDivElement>(null)
 
+  const trackAddToCart = () => {
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'AddToCart', {
+        value: PRICE,
+        currency: 'PKR',
+        content_name: 'AI Video Bootcamp',
+      })
+    }
+  }
+
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).fbq) {
       (window as any).fbq('track', 'ViewContent')
@@ -551,6 +561,7 @@ export default function HomePage() {
 
           <Link
             href="/enroll"
+            onClick={trackAddToCart}
             className="btn-premium inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-white sm:text-sm"
           >
             Enroll Now <ArrowRight className="h-4 w-4" />
@@ -596,6 +607,7 @@ export default function HomePage() {
           <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/enroll"
+              onClick={trackAddToCart}
               className="btn-premium inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold text-white sm:w-auto sm:text-base"
             >
               Enroll Now — PKR {PRICE.toLocaleString()} <ArrowRight className="h-5 w-5" />
@@ -656,7 +668,7 @@ export default function HomePage() {
             <Image src="/community.png" alt="AI Bootcamp PK Skool Community" width={1200} height={800} className="w-full h-auto object-cover" />
           </div>
           <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/enroll" className="btn-premium inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold text-white sm:w-auto">
+            <Link href="/enroll" onClick={trackAddToCart} className="btn-premium inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold text-white sm:w-auto">
               Enroll Now — PKR {PRICE.toLocaleString()} <ArrowRight className="h-5 w-5" />
             </Link>
             <a href="#reviews" className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto">
@@ -710,6 +722,7 @@ export default function HomePage() {
 
               <Link
                 href="/enroll"
+                onClick={trackAddToCart}
                 className="btn-premium mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white"
               >
                 Enroll Now — Rs. {PRICE.toLocaleString()} <ArrowRight className="h-5 w-5" />
@@ -878,6 +891,7 @@ export default function HomePage() {
           </h2>
           <Link
             href="/enroll"
+            onClick={trackAddToCart}
             className="mt-10 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 px-8 py-3.5 text-base font-semibold text-white shadow-lg transition-transform hover:scale-105"
           >
             Enroll Now <ArrowRight className="h-5 w-5" />
@@ -896,6 +910,7 @@ export default function HomePage() {
           </p>
           <Link
             href="/enroll"
+            onClick={trackAddToCart}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 px-8 py-3.5 text-base font-semibold text-white shadow-lg transition-transform hover:scale-105"
           >
             Enroll Now <ArrowRight className="h-5 w-5" />
