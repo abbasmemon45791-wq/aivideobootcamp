@@ -45,28 +45,6 @@ function getGASessionId(): string | undefined {
   return undefined
 }
 
-// ── Google Ads / GA4 helpers ────────────────────────────────────────────────
-function gtagSafe(
-  params: Record<string, unknown>,
-  userData?: { email: string; phone: string }
-) {
-  const fire = () => {
-    if (typeof window === 'undefined' || !(window as any).gtag) return
-    if (userData) {
-      const normPhone = userData.phone.replace(/\D/g, '')
-      const e164 = normPhone.startsWith('92') ? `+${normPhone}` :
-                   normPhone.startsWith('0')  ? `+92${normPhone.slice(1)}` :
-                   `+${normPhone}`
-      ;(window as any).gtag('set', 'user_data', { email: userData.email, phone_number: e164 })
-    }
-    ;(window as any).gtag('event', 'conversion', params)
-  }
-  if (typeof window !== 'undefined' && (window as any).gtag) {
-    fire()
-  } else {
-    setTimeout(fire, 1500)
-  }
-}
 
 function fireGA4Event(eventName: string, params: Record<string, unknown>) {
   if (typeof window === 'undefined' || !(window as any).gtag) return
@@ -187,20 +165,7 @@ function Step1({ onDone }: {
       }
 
       if (!data.existing) {
-
-        // Google Ads Lead conversion
-        if (process.env.NEXT_PUBLIC_GA_LEAD_LABEL) {
-          gtagSafe(
-            {
-              send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_LEAD_LABEL}`,
-              value: totalAmount,
-              currency: 'PKR',
-            },
-            { email: email.trim().toLowerCase(), phone: wa.trim() }
-          )
-        }
-
-        // GA4 generic event
+        // GA4 Lead event (imported directly by Google Ads)
         fireGA4Event('generate_lead', { value: totalAmount, currency: 'PKR' })
       }
 
@@ -700,17 +665,6 @@ function Step3({
           (window as any).fbq('track', 'Purchase', { value: finalPrice, currency: 'PKR' }, { eventID: purchaseEventId })
         }
 
-        if (process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL) {
-          gtagSafe(
-            {
-              send_to: `${process.env.NEXT_PUBLIC_GA_ID}/${process.env.NEXT_PUBLIC_GA_PURCHASE_LABEL}`,
-              value: finalPrice,
-              currency: 'PKR',
-              transaction_id: (verifyResult as Record<string,unknown>)?.transactionId || purchaseEventId,
-            },
-            { email: userData.email, phone: userData.whatsapp }
-          )
-        }
 
         fireGA4Event('purchase', {
           transaction_id: (verifyResult as Record<string,unknown>)?.transactionId || purchaseEventId,

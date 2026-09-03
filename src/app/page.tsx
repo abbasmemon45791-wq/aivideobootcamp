@@ -484,7 +484,11 @@ export default function HomePage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).fbq) {
-      (window as any).fbq('track', 'ViewContent')
+      (window as any).fbq('track', 'ViewContent', {
+        content_name: 'AI Video Bootcamp',
+        value: PRICE,
+        currency: 'PKR',
+      })
     }
 
     // Capture source from URL or Referrer and save to localStorage

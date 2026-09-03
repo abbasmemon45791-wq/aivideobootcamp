@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || process.env.NEXT_PUBLIC_META_PIXEL_ID || '2170349516868440'
-  const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA4_ID || process.env.NEXT_PUBLIC_GA_ID || 'AW-18327926458'
+  const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID || 'G-Y2SZLNREPD'
 
   return (
     <html lang="en" className={`${inter.variable} ${sora.variable} ${jakarta.variable}`}>
@@ -42,9 +42,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           `}
         </Script>
 
-        {/* Google Analytics / Google Ads gtag — loads before conversion triggers */}
+        {/* Google Analytics 4 (GA4) */}
         <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`}
           strategy="afterInteractive"
         />
         <Script id="google-tracking-init" strategy="afterInteractive">
@@ -52,8 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${GA_TRACKING_ID}', {
-              allow_enhanced_conversions: true,
+            gtag('config', '${GA4_ID}', {
               send_page_view: true
             });
           `}

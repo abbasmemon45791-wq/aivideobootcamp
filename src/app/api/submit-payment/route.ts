@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
     if (!wasAlreadySubmitted) {
       try {
         const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || process.env.NEXT_PUBLIC_FB_PIXEL_ID || '2170349516868440'
-        const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN
+        const ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || 'EAAVEgSnZBQVcBSEONSoDgGnhf1z2otZBF6EW3M6bttpjSCdqPt8ZCvuMZCZCSY2Wx10mJwxozG2e3HRqJjbgK0rkf48XnmaQVQygU1NvIzQikMOVVzZBYTDALbh4t5O3uZBDtZAS5vrA13vfy3XCMTlsbQb3ZCK11YNntxV5NpIZB4K7nmpp1rOy8kYmFIPqK4aAZDZD'
         if (PIXEL_ID && ACCESS_TOKEN && lead.email) {
           const hashedEmail = hashEmailForMeta(lead.email)
           const hashedPhone = hashPhoneForMeta(lead.whatsapp)
