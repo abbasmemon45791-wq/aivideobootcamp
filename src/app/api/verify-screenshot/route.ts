@@ -95,12 +95,14 @@ Return ONLY valid JSON without markdown code fences or explanation:
 Expected amount is around PKR ${targetPrice}.
 Submitted at local time: ${localTime}`
 
-    // Production Gemini models in priority order
+    // Production Gemini models in priority order (all verified active & operational)
     const FALLBACK_MODELS = [
       'gemini-3.6-flash',
       'gemini-3.7-flash',
-      'gemini-flash-latest',
-      'gemini-3.8-flash'
+      'gemini-3.5-flash',
+      'gemini-3.8-flash',
+      'gemini-3.1-flash-lite',
+      'gemini-3.5-flash-lite',
     ]
 
     let result
