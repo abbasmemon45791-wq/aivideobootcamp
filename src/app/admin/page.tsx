@@ -185,7 +185,7 @@ function LeadRow({ lead, token, onUpdate, isSelected, onToggleSelect }: { lead: 
   }
 
   const uaInfo = parseUA(lead.user_agent)
-  const showApproveButtons = isSite2 ? lead.status !== 'approved' : lead.status === 'payment_submitted'
+  const showApproveButtons = lead.status !== 'approved'
 
   return (
     <div className={`overflow-hidden rounded-xl border transition shadow-sm hover:shadow-md ${isSelected ? 'border-blue-400 bg-blue-50/30' : 'border-slate-200 bg-white'}`}>
