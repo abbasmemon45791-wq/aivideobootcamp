@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { hashData, hashEmailForMeta, hashPhoneForMeta } from '@/lib/tracking'
+import { hashData, hashEmailForMeta, hashPhoneForMeta, hashPhoneForGoogle } from '@/lib/tracking'
 
 export async function POST(req: NextRequest) {
   const token = req.headers.get('x-admin-token')
@@ -118,16 +118,20 @@ export async function POST(req: NextRequest) {
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
                         client_id: resolvedClientId,
+                        user_data: {
+                          ...(l.email && {
+                            sha256_email_address: [hashEmailForMeta(l.email)],
+                          }),
+                          ...(l.whatsapp && {
+                            sha256_phone_number: [hashPhoneForGoogle(l.whatsapp)],
+                          }),
+                        },
                         events: [{
                           name: 'purchase',
                           params: purchaseParams,
                         }],
-                        ...(l.email && {
-                          user_properties: {
-                            email: { value: l.email },
-                          },
-                        }),
                       }),
+
                     }
                   )
                 }

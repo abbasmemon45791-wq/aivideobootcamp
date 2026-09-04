@@ -51,6 +51,80 @@ function fireGA4Event(eventName: string, params: Record<string, unknown>) {
   ;(window as any).gtag('event', eventName, params)
 }
 
+function normalizePhoneForGoogle(phone?: string | null): string {
+  if (!phone) return ''
+  let digits = phone.replace(/\D/g, '')
+  if (digits.startsWith('0')) {
+    digits = '+92' + digits.slice(1)
+  } else if (digits.startsWith('92')) {
+    digits = '+' + digits
+  } else if (digits.length === 10 && digits.startsWith('3')) {
+    digits = '+92' + digits
+  } else if (!digits.startsWith('+') && digits.length > 0) {
+    digits = '+' + digits
+  }
+  return digits
+}
+
+function normalizePhoneForMeta(phone?: string | null): string {
+  if (!phone) return ''
+  let digits = phone.replace(/\D/g, '')
+  if (digits.startsWith('0')) {
+    digits = '92' + digits.slice(1)
+  } else if (digits.length === 10 && digits.startsWith('3')) {
+    digits = '92' + digits
+  }
+  return digits
+}
+
+/**
+ * Sets Google Enhanced Conversions & Meta Pixel Advanced Matching on browser
+ */
+function setEnhancedConversionsUserData(email?: string | null, phone?: string | null, fullName?: string | null, externalId?: string | null) {
+  if (typeof window === 'undefined') return
+
+  const cleanEmail = email?.trim().toLowerCase() || ''
+  const googlePhone = normalizePhoneForGoogle(phone)
+  const metaPhone = normalizePhoneForMeta(phone)
+  const nameParts = (fullName || '').trim().split(/\s+/)
+  const firstName = nameParts[0] || ''
+  const lastName = nameParts.slice(1).join(' ') || ''
+
+  // 1. Google Enhanced Conversions (Browser / Web)
+  if ((window as any).gtag && (cleanEmail || googlePhone)) {
+    try {
+      ;(window as any).gtag('set', 'user_data', {
+        ...(cleanEmail ? { email: cleanEmail } : {}),
+        ...(googlePhone ? { phone_number: googlePhone } : {}),
+        address: {
+          ...(firstName ? { first_name: firstName } : {}),
+          ...(lastName ? { last_name: lastName } : {}),
+          country: 'PK',
+        },
+      })
+    } catch (e) {
+      console.warn('Google Enhanced Conversions error:', e)
+    }
+  }
+
+  // 2. Meta Pixel Advanced Matching (Browser)
+  if ((window as any).fbq && (cleanEmail || metaPhone)) {
+    try {
+      const pixelId = process.env.NEXT_PUBLIC_FB_PIXEL_ID || process.env.NEXT_PUBLIC_META_PIXEL_ID || '2170349516868440'
+      ;(window as any).fbq('init', pixelId, {
+        ...(cleanEmail ? { em: cleanEmail } : {}),
+        ...(metaPhone ? { ph: metaPhone } : {}),
+        ...(firstName ? { fn: firstName.toLowerCase() } : {}),
+        ...(lastName ? { ln: lastName.toLowerCase() } : {}),
+        ...(externalId ? { external_id: externalId } : {}),
+      })
+    } catch (e) {
+      console.warn('Meta Pixel Advanced Matching error:', e)
+    }
+  }
+}
+
+
 // ── Step Indicator ─────────────────────────────────────────────────────────
 function StepBar({ step }: { step: number }) {
   return (
@@ -160,14 +234,18 @@ function Step1({ onDone }: {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
+      // Set Google Enhanced Conversions & Meta Pixel Advanced Matching in browser immediately
+      setEnhancedConversionsUserData(email, wa, name, data.id)
+
       if (typeof window !== 'undefined' && (window as any).fbq) {
         (window as any).fbq('track', 'Lead', { value: totalAmount, currency: 'PKR' }, { eventID: leadEventId })
       }
 
       if (!data.existing) {
-        // GA4 Lead event (imported directly by Google Ads)
+        // GA4 Lead event (with Enhanced Conversions attached)
         fireGA4Event('generate_lead', { value: totalAmount, currency: 'PKR' })
       }
+
 
       onDone(data.id, {
         name: name.trim(),
@@ -395,13 +473,14 @@ function Step2({
 }) {
   // Fire 2nd Lead event when Step 2 renders
   useEffect(() => {
+    setEnhancedConversionsUserData(userData.email, userData.whatsapp, userData.name)
     if (typeof window !== 'undefined' && (window as any).fbq) {
       (window as any).fbq('track', 'Lead', {
         value: userData.totalAmount,
         currency: 'PKR',
       })
     }
-  }, [userData.totalAmount])
+  }, [userData.totalAmount, userData.email, userData.whatsapp, userData.name])
 
   const handleContinue = () => {
     // Fire 1st InitiateCheckout event on Step 2 submit
@@ -661,9 +740,13 @@ function Step3({
       const finalPrice = Number(userData.totalAmount) || 1999
 
       if (!data.alreadyTracked) {
+        // Set user data for Purchase conversion matching
+        setEnhancedConversionsUserData(userData.email, userData.whatsapp, userData.name, leadId)
+
         if (typeof window !== 'undefined' && (window as any).fbq) {
           (window as any).fbq('track', 'Purchase', { value: finalPrice, currency: 'PKR' }, { eventID: purchaseEventId })
         }
+
 
 
         fireGA4Event('purchase', {

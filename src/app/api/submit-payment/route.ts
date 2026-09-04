@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { hashEmailForMeta, hashPhoneForMeta } from '@/lib/tracking'
+import { hashEmailForMeta, hashPhoneForMeta, hashPhoneForGoogle } from '@/lib/tracking'
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     // Verify lead exists
     const { data: lead } = await supabaseAdmin
       .from('leads')
-      .select('id, name, email, whatsapp, status, utm_content')
+      .select('id, name, email, whatsapp, status, utm_content, ga_client_id, ga_session_id')
       .eq('id', leadId)
       .maybeSingle()
 
@@ -176,7 +176,60 @@ export async function POST(req: NextRequest) {
       } catch (fbErr) {
         console.error('FB CAPI Error (Purchase):', fbErr)
       }
+
+      // GA4 Measurement Protocol Purchase (server-side backup with Enhanced Conversions)
+      try {
+        const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID || 'G-Y2SZLNREPD'
+        const API_SECRET = process.env.GA4_API_SECRET || 'ZCnSzNHmT5Cte3cAOZ8rVQ'
+        if (GA4_ID && API_SECRET) {
+          const rawSessionId = (lead as any)?.ga_session_id
+          const gaSessionNum = rawSessionId && !isNaN(Number(rawSessionId)) ? Number(rawSessionId) : undefined
+          await fetch(
+            `https://www.google-analytics.com/mp/collect?measurement_id=${GA4_ID}&api_secret=${API_SECRET}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                client_id: (lead as any)?.ga_client_id || `web.${leadId}`,
+                user_data: {
+                  ...(lead.email && {
+                    sha256_email_address: [hashEmailForMeta(lead.email)],
+                  }),
+                  ...(lead.whatsapp && {
+                    sha256_phone_number: [hashPhoneForGoogle(lead.whatsapp)],
+                  }),
+                },
+                events: [
+                  {
+                    name: 'purchase',
+                    params: {
+                      transaction_id: transactionId || eventId || leadId,
+                      value: finalAmount,
+                      currency: 'PKR',
+                      ...(gaSessionNum && {
+                        session_id: gaSessionNum,
+                        engagement_time_msec: 100,
+                      }),
+                      items: [
+                        {
+                          item_id: 'ai-bootcamp-pk',
+                          item_name: process.env.COURSE_NAME || 'AI Video Bootcamp Pakistan',
+                          price: finalAmount,
+                          quantity: 1,
+                        },
+                      ],
+                    },
+                  },
+                ],
+              }),
+            }
+          ).catch(err => console.error('GA4 MP Error (Purchase):', err))
+        }
+      } catch (ga4Err) {
+        console.error('GA4 MP Error (Purchase):', ga4Err)
+      }
     }
+
 
     return NextResponse.json({ success: true, alreadyTracked: wasAlreadySubmitted })
   } catch (err) {

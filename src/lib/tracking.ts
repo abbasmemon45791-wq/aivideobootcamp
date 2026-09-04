@@ -27,3 +27,16 @@ export function hashEmailForMeta(email?: string | null): string {
   if (!email) return ''
   return hashData(email.toLowerCase().trim())
 }
+
+/**
+ * Normalizes a phone number to E.164 format for Google Enhanced Conversions (e.g. +923180298090).
+ */
+export function normalizePhoneForGoogle(phone?: string | null): string {
+  const metaDigits = normalizePhoneForMeta(phone)
+  return metaDigits ? `+${metaDigits}` : ''
+}
+
+export function hashPhoneForGoogle(phone?: string | null): string | undefined {
+  const e164 = normalizePhoneForGoogle(phone)
+  return e164 ? hashData(e164) : undefined
+}
